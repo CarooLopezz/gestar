@@ -12,7 +12,7 @@ export default function LandingScreen({ onOpenNurse, onOpenPatient }) {
           onClick={onOpenNurse}
           className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-xl shadow-sm transition"
         >
-          👩‍⚕️ Ingresar como enfermera
+          👩‍⚕️ Ingresar como enfermero
         </button>
         <button
           onClick={onOpenPatient}

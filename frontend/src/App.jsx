@@ -1,6 +1,6 @@
 import { useState } from "react";
 import LandingScreen from "./components/LandingScreen";
-import NurseDashboard from "./components/NurseDashboard";
+import NursePortal from "./components/NursePortal";
 import PatientPortal from "./components/PatientPortal";
 import Toast from "./components/Toast";
 import { useToast } from "./hooks/useToast";
@@ -22,7 +22,7 @@ export default function App() {
       )}
 
       {screen === "nurse" && (
-        <NurseDashboard onLogout={() => setScreen("landing")} showToast={showToast} />
+        <NursePortal onBack={() => setScreen("landing")} showToast={showToast} />
       )}
 
       {screen === "patient" && (

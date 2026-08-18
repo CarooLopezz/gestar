@@ -7,6 +7,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 async function request(path, options = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     ...options,
   });
 
@@ -37,4 +38,16 @@ export const api = {
   getSymptoms: (dni) => request(`/symptoms/${encodeURIComponent(dni)}`),
   createSymptomRecord: (payload) =>
     request("/symptoms", { method: "POST", body: JSON.stringify(payload) }),
+
+  registerNurse: (payload) =>
+    request("/nurse/register", { method: "POST", body: JSON.stringify(payload) }),
+  loginNurse: (payload) =>
+    request("/nurse/login", { method: "POST", body: JSON.stringify(payload) }),
+  logoutNurse: () => request("/nurse/logout", { method: "POST" }),
+  getMe: () => request("/nurse/me"),
+
+  getWeights: () => request("/weights"),
+  createWeightRecord: (payload) =>
+    request("/weights", { method: "POST", body: JSON.stringify(payload) }),
+  getAlerts: () => request("/alerts"),
 };

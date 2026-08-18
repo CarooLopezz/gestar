@@ -3,33 +3,52 @@ import { api } from "../api/client";
 import RegisterPatientForm from "./RegisterPatientForm";
 import PatientListTable from "./PatientListTable";
 import BloodPressureForm from "./BloodPressureForm";
+import WeightForm from "./WeightForm";
+import AlertsPanel from "./AlertsPanel";
 
 const NAV_ITEMS = [
   { id: "register", label: "Registrar embarazada", icon: "➕" },
   { id: "list", label: "Lista de usuarios", icon: "📋" },
   { id: "bp", label: "Registrar presión arterial", icon: "🩺" },
+  { id: "weight", label: "Registrar peso", icon: "⚖️" },
+  { id: "alerts", label: "Alertas", icon: "🚨" },
 ];
 
-export default function NurseDashboard({ onLogout, showToast }) {
+export default function NurseDashboard({ nurse, onLogout, showToast }) {
   const [activeView, setActiveView] = useState("register");
   const [patients, setPatients] = useState([]);
   const [bpRecords, setBpRecords] = useState([]);
+  const [weightRecords, setWeightRecords] = useState([]);
+  const [alerts, setAlerts] = useState([]);
 
-  const loadPatients = async () => {
+  const withSessionGuard = (fn) => async (...args) => {
     try {
-      setPatients(await api.getPatients());
+      await fn(...args);
     } catch (err) {
-      showToast(err.message || "No se pudo cargar la lista", false);
+      if (err.status === 401) {
+        showToast("Tu sesión expiró. Iniciá sesión de nuevo.", false);
+        onLogout();
+        return;
+      }
+      throw err;
     }
   };
 
-  const loadBPRecords = async () => {
-    try {
-      setBpRecords(await api.getBPRecords());
-    } catch (err) {
-      showToast(err.message || "No se pudo cargar el historial", false);
-    }
-  };
+  const loadPatients = withSessionGuard(async () => {
+    setPatients(await api.getPatients());
+  });
+
+  const loadBPRecords = withSessionGuard(async () => {
+    setBpRecords(await api.getBPRecords());
+  });
+
+  const loadWeightRecords = withSessionGuard(async () => {
+    setWeightRecords(await api.getWeights());
+  });
+
+  const loadAlerts = withSessionGuard(async () => {
+    setAlerts(await api.getAlerts());
+  });
 
   useEffect(() => {
     loadPatients();
@@ -41,6 +60,11 @@ export default function NurseDashboard({ onLogout, showToast }) {
       loadPatients();
       loadBPRecords();
     }
+    if (activeView === "weight") {
+      loadPatients();
+      loadWeightRecords();
+    }
+    if (activeView === "alerts") loadAlerts();
   }, [activeView]);
 
   return (
@@ -50,6 +74,12 @@ export default function NurseDashboard({ onLogout, showToast }) {
           <span className="text-2xl">👩‍⚕️</span>
           <span className="font-bold text-purple-700">GESTAR+</span>
         </div>
+
+        {nurse && (
+          <div className="px-6 py-3 border-b border-gray-100 text-xs text-gray-500">
+            {nurse.nombre} {nurse.apellido}
+          </div>
+        )}
 
         <nav className="flex-1 px-3 py-4 space-y-1">
           {NAV_ITEMS.map((item) => (
@@ -92,6 +122,18 @@ export default function NurseDashboard({ onLogout, showToast }) {
             showToast={showToast}
           />
         )}
+        {activeView === "weight" && (
+          <WeightForm
+            patients={patients}
+            weightRecords={weightRecords}
+            onRecordCreated={(r) => {
+              setWeightRecords((prev) => [r, ...prev]);
+              if (r.alerta) setAlerts((prev) => [r, ...prev]);
+            }}
+            showToast={showToast}
+          />
+        )}
+        {activeView === "alerts" && <AlertsPanel alerts={alerts} />}
       </main>
     </div>
   );
