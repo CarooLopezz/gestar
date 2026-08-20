@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
+import ConfirmLogoutModal from "./ConfirmLogoutModal";
 
 const SINTOMAS = [
   "Dolor de cabeza intenso",
@@ -15,6 +16,7 @@ export default function SymptomsForm({ patient, onLogout, showToast }) {
   const [error, setError] = useState("");
   const [records, setRecords] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const loadHistory = async () => {
     try {
@@ -59,7 +61,10 @@ export default function SymptomsForm({ patient, onLogout, showToast }) {
         <h1 className="text-lg font-semibold text-gray-800">
           Hola, {patient.nombre} 👋
         </h1>
-        <button onClick={onLogout} className="text-sm text-gray-400 hover:text-gray-600">
+        <button
+          onClick={() => setShowLogoutConfirm(true)}
+          className="text-sm text-gray-400 hover:text-gray-600"
+        >
           Salir
         </button>
       </div>
@@ -117,6 +122,15 @@ export default function SymptomsForm({ patient, onLogout, showToast }) {
           )}
         </div>
       </div>
+      <ConfirmLogoutModal
+        open={showLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          showToast("Sesión cerrada correctamente.");
+          onLogout();
+        }}
+      />
     </div>
   );
 }

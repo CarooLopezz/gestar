@@ -6,6 +6,7 @@ import BloodPressureForm from "./BloodPressureForm";
 import WeightForm from "./WeightForm";
 import AlertsPanel from "./AlertsPanel";
 import NurseListTable from "./NurseListTable";
+import ConfirmLogoutModal from "./ConfirmLogoutModal";
 
 const NAV_ITEMS = [
   { id: "register", label: "Registrar", icon: "➕" },
@@ -22,6 +23,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
   const [weightRecords, setWeightRecords] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [nurses, setNurses] = useState([]);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const withSessionGuard = (fn) => async (...args) => {
     try {
@@ -107,7 +109,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
 
         <div className="p-3 border-t border-gray-100">
           <button
-            onClick={onLogout}
+            onClick={() => setShowLogoutConfirm(true)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50"
           >
             🚪 Cerrar sesión
@@ -150,6 +152,16 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
         )}
         {activeView === "alerts" && <AlertsPanel alerts={alerts} />}
       </main>
-    </div>
-  );
-}
+
+      <ConfirmLogoutModal
+        open={showLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          showToast("Sesión cerrada correctamente.");
+          onLogout();
+        }}
+      />
+     </div>
+   );
+ }
