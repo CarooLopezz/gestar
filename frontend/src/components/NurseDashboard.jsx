@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import RegisterPatientForm from "./RegisterPatientForm";
 import PatientListTable from "./PatientListTable";
 import BloodPressureForm from "./BloodPressureForm";
+import ConfirmLogoutModal from "./ConfirmLogoutModal";
 
 const NAV_ITEMS = [
   { id: "register", label: "Registrar embarazada", icon: "➕" },
@@ -14,6 +15,7 @@ export default function NurseDashboard({ onLogout, showToast }) {
   const [activeView, setActiveView] = useState("register");
   const [patients, setPatients] = useState([]);
   const [bpRecords, setBpRecords] = useState([]);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const loadPatients = async () => {
     try {
@@ -68,7 +70,7 @@ export default function NurseDashboard({ onLogout, showToast }) {
 
         <div className="p-3 border-t border-gray-100">
           <button
-            onClick={onLogout}
+            onClick={() => setShowLogoutConfirm(true)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50"
           >
             🚪 Cerrar sesión
@@ -93,6 +95,16 @@ export default function NurseDashboard({ onLogout, showToast }) {
           />
         )}
       </main>
-    </div>
-  );
-}
+
+      <ConfirmLogoutModal
+        open={showLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          showToast("Sesión cerrada correctamente.");
+          onLogout();
+        }}
+      />
+     </div>
+   );
+ }
