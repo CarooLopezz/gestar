@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "../api/client";
+import PasswordInput from "./PasswordInput";
 
 export default function PatientLoginForm({ onLogin, onBack }) {
   const [email, setEmail] = useState("");
@@ -39,11 +40,10 @@ export default function PatientLoginForm({ onLogin, onBack }) {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">Contraseña</label>
-          <input
-            type="password"
+          <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+            focusRingClass="focus:ring-pink-300"
           />
         </div>
 

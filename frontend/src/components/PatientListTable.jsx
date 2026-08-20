@@ -1,7 +1,7 @@
 export default function PatientListTable({ patients }) {
   return (
     <div className="fade-in">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Lista de usuarios</h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Embarazadas registradas</h2>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-sm text-left">
           <thead className="bg-gray-50 text-gray-500">

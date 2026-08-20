@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "../api/client";
+import PasswordInput from "./PasswordInput";
 
 const emptyForm = { nombre: "", apellido: "", email: "", password: "" };
 
@@ -65,12 +66,7 @@ export default function NurseRegisterForm({ onRegistered, onBack, onGoToLogin })
         </Field>
 
         <Field label="Contraseña" error={errors.password}>
-          <input
-            type="password"
-            value={form.password}
-            onChange={handleChange("password")}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
-          />
+          <PasswordInput value={form.password} onChange={handleChange("password")} />
         </Field>
 
         {errors._general && <p className="text-red-500 text-xs">{errors._general}</p>}

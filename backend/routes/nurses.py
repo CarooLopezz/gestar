@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from auth import nurse_required
 from extensions import db
 from models import Nurse
 
@@ -80,3 +81,10 @@ def get_current_nurse():
         return jsonify({"error": "No autorizado."}), 401
 
     return jsonify(nurse.to_dict()), 200
+
+
+@nurses_bp.route("/api/nurses", methods=["GET"])
+@nurse_required
+def get_nurses():
+    nurses = Nurse.query.all()
+    return jsonify([n.to_dict() for n in nurses]), 200

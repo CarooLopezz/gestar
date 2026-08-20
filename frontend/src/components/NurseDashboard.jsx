@@ -5,6 +5,7 @@ import PatientListTable from "./PatientListTable";
 import BloodPressureForm from "./BloodPressureForm";
 import WeightForm from "./WeightForm";
 import AlertsPanel from "./AlertsPanel";
+import NurseListTable from "./NurseListTable";
 
 const NAV_ITEMS = [
   { id: "register", label: "Registrar embarazada", icon: "➕" },
@@ -20,6 +21,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
   const [bpRecords, setBpRecords] = useState([]);
   const [weightRecords, setWeightRecords] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [nurses, setNurses] = useState([]);
 
   const withSessionGuard = (fn) => async (...args) => {
     try {
@@ -50,12 +52,19 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
     setAlerts(await api.getAlerts());
   });
 
+  const loadNurses = withSessionGuard(async () => {
+    setNurses(await api.getNurses());
+  });
+
   useEffect(() => {
     loadPatients();
   }, []);
 
   useEffect(() => {
-    if (activeView === "list") loadPatients();
+    if (activeView === "list") {
+      loadPatients();
+      loadNurses();
+    }
     if (activeView === "bp") {
       loadPatients();
       loadBPRecords();
@@ -113,7 +122,12 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
             showToast={showToast}
           />
         )}
-        {activeView === "list" && <PatientListTable patients={patients} />}
+        {activeView === "list" && (
+          <div className="space-y-8">
+            <PatientListTable patients={patients} />
+            <NurseListTable nurses={nurses} />
+          </div>
+        )}
         {activeView === "bp" && (
           <BloodPressureForm
             patients={patients}
