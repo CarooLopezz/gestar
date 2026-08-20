@@ -88,3 +88,46 @@ def get_current_nurse():
 def get_nurses():
     nurses = Nurse.query.all()
     return jsonify([n.to_dict() for n in nurses]), 200
+
+
+@nurses_bp.route("/api/nurses", methods=["POST"])
+@nurse_required
+def create_nurse():
+    data = request.get_json(force=True, silent=True) or {}
+
+    nombre = (data.get("nombre") or "").strip()
+    apellido = (data.get("apellido") or "").strip()
+    email = (data.get("email") or "").strip()
+    password = (data.get("password") or "").strip()
+
+    errors = {}
+    if not nombre:
+        errors["nombre"] = "Campo obligatorio"
+    if not apellido:
+        errors["apellido"] = "Campo obligatorio"
+    if not email:
+        errors["email"] = "Campo obligatorio"
+    elif "@" not in email or "." not in email.split("@")[-1]:
+        errors["email"] = "Formato de email inválido"
+    elif Nurse.query.filter_by(email=email).first():
+        errors["email"] = "Email ya registrado"
+    if not password:
+        errors["password"] = "Campo obligatorio"
+    elif len(password) < 6:
+        errors["password"] = "Mínimo 6 caracteres"
+
+    if errors:
+        return jsonify({"errors": errors}), 400
+
+    nurse = Nurse(
+        nombre=nombre,
+        apellido=apellido,
+        email=email,
+        password_hash=generate_password_hash(password),
+    )
+    db.session.add(nurse)
+    db.session.commit()
+
+    # Lo crea un enfermero ya logueado: a diferencia de /api/nurse/register,
+    # no se toca la sesión (no hay que reemplazar la sesión activa por la del nuevo usuario).
+    return jsonify(nurse.to_dict()), 201

@@ -52,4 +52,6 @@ export const api = {
   getAlerts: () => request("/alerts"),
 
   getNurses: () => request("/nurses"),
+  createNurse: (payload) =>
+    request("/nurses", { method: "POST", body: JSON.stringify(payload) }),
 };

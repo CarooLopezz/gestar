@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
-import RegisterPatientForm from "./RegisterPatientForm";
+import RegisterUserForm from "./RegisterUserForm";
 import PatientListTable from "./PatientListTable";
 import BloodPressureForm from "./BloodPressureForm";
 import WeightForm from "./WeightForm";
@@ -8,7 +8,7 @@ import AlertsPanel from "./AlertsPanel";
 import NurseListTable from "./NurseListTable";
 
 const NAV_ITEMS = [
-  { id: "register", label: "Registrar embarazada", icon: "➕" },
+  { id: "register", label: "Registrar", icon: "➕" },
   { id: "list", label: "Lista de usuarios", icon: "📋" },
   { id: "bp", label: "Registrar presión arterial", icon: "🩺" },
   { id: "weight", label: "Registrar peso", icon: "⚖️" },
@@ -117,8 +117,9 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
 
       <main className="flex-1 p-8 overflow-y-auto">
         {activeView === "register" && (
-          <RegisterPatientForm
+          <RegisterUserForm
             onPatientCreated={(p) => setPatients((prev) => [...prev, p])}
+            onNurseCreated={(n) => setNurses((prev) => [...prev, n])}
             showToast={showToast}
           />
         )}

@@ -39,12 +39,15 @@ export default function PatientLoginForm({ onLogin, onBack }) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">Contraseña</label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Contraseña (tu DNI)</label>
           <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             focusRingClass="focus:ring-pink-300"
           />
+          <p className="text-gray-400 text-xs mt-1">
+            Usá el mismo DNI con el que te registró la enfermera.
+          </p>
         </div>
 
         {error && <p className="text-red-500 text-xs">{error}</p>}
