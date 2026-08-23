@@ -55,6 +55,10 @@ export const api = {
     request("/weights", { method: "POST", body: JSON.stringify(payload) }),
   getAlerts: () => request("/alerts"),
 
+  getOwnWeightRecords: (dni) => request(`/weights/patient/${encodeURIComponent(dni)}`),
+  createOwnWeightRecord: (payload) =>
+    request("/weights/patient", { method: "POST", body: JSON.stringify(payload) }),
+
   getNurses: () => request("/nurses"),
   createNurse: (payload) =>
     request("/nurses", { method: "POST", body: JSON.stringify(payload) }),
