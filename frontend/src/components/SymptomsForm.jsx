@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
-import ConfirmLogoutModal from "./ConfirmLogoutModal";
 
 const SINTOMAS = [
   "Dolor de cabeza intenso",
@@ -11,12 +10,11 @@ const SINTOMAS = [
   "Mareos",
 ];
 
-export default function SymptomsForm({ patient, onLogout, showToast }) {
+export default function SymptomsForm({ patient, showToast }) {
   const [checked, setChecked] = useState([]);
   const [error, setError] = useState("");
   const [records, setRecords] = useState([]);
   const [submitting, setSubmitting] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const loadHistory = async () => {
     try {
@@ -56,19 +54,7 @@ export default function SymptomsForm({ patient, onLogout, showToast }) {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 px-4 py-8 flex flex-col items-center">
-      <div className="w-full max-w-lg flex justify-between items-center mb-6">
-        <h1 className="text-lg font-semibold text-gray-800">
-          Hola, {patient.nombre} 👋
-        </h1>
-        <button
-          onClick={() => setShowLogoutConfirm(true)}
-          className="text-sm text-gray-400 hover:text-gray-600"
-        >
-          Salir
-        </button>
-      </div>
-
+    <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full max-w-lg mb-8">
         <h2 className="font-medium text-gray-700 mb-4">¿Cómo te sentís hoy?</h2>
         <div className="space-y-2 mb-4">
@@ -96,7 +82,7 @@ export default function SymptomsForm({ patient, onLogout, showToast }) {
         </button>
       </div>
 
-      <div className="w-full max-w-lg">
+      <div className="w-full max-w-lg mb-8">
         <h3 className="font-medium text-gray-700 mb-3">Historial de síntomas</h3>
         <div className="space-y-3">
           {records.map((r) => (
@@ -122,15 +108,6 @@ export default function SymptomsForm({ patient, onLogout, showToast }) {
           )}
         </div>
       </div>
-      <ConfirmLogoutModal
-        open={showLogoutConfirm}
-        onCancel={() => setShowLogoutConfirm(false)}
-        onConfirm={() => {
-          setShowLogoutConfirm(false);
-          showToast("Sesión cerrada correctamente.");
-          onLogout();
-        }}
-      />
-    </div>
+    </>
   );
 }

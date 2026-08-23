@@ -39,6 +39,10 @@ export const api = {
   createSymptomRecord: (payload) =>
     request("/symptoms", { method: "POST", body: JSON.stringify(payload) }),
 
+  getOwnBPRecords: (dni) => request(`/bp/patient/${encodeURIComponent(dni)}`),
+  createOwnBPRecord: (payload) =>
+    request("/bp/patient", { method: "POST", body: JSON.stringify(payload) }),
+
   registerNurse: (payload) =>
     request("/nurse/register", { method: "POST", body: JSON.stringify(payload) }),
   loginNurse: (payload) =>
