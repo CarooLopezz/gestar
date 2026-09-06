@@ -1,6 +1,6 @@
 """
 GESTAR+ - Backend API
-Flask + SQLAlchemy (MySQL)
+Flask + SQLAlchemy (Postgres en producción, SQLite en desarrollo local)
 """
 import os
 
@@ -13,15 +13,10 @@ from routes import register_routes
 
 load_dotenv()
 
-# Railway (y otros PaaS) exponen la MySQL como una única URL de conexión;
-# en local seguimos armándola a partir de las variables sueltas.
-DATABASE_URL = os.environ.get("DATABASE_URL") or os.environ.get("MYSQL_URL")
-
-DB_HOST = os.environ.get("DB_HOST", os.environ.get("MYSQLHOST", "127.0.0.1"))
-DB_PORT = os.environ.get("DB_PORT", os.environ.get("MYSQLPORT", "3306"))
-DB_USER = os.environ.get("DB_USER", os.environ.get("MYSQLUSER", "root"))
-DB_PASSWORD = os.environ.get("DB_PASSWORD", os.environ.get("MYSQLPASSWORD", ""))
-DB_NAME = os.environ.get("DB_NAME", os.environ.get("MYSQLDATABASE", "gestar"))
+# Render (y otros PaaS) inyectan la URL de Postgres en DATABASE_URL. Sin esa
+# variable (desarrollo local) usamos un archivo SQLite, así no hace falta
+# tener ningún servidor de base de datos corriendo para levantar el backend.
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")
 IS_PRODUCTION = os.environ.get("FLASK_ENV", "development") == "production"
@@ -40,9 +35,11 @@ app.config["SESSION_COOKIE_SAMESITE"] = "None" if IS_PRODUCTION else "Lax"
 app.config["SESSION_COOKIE_SECURE"] = IS_PRODUCTION
 
 if DATABASE_URL:
-    sqlalchemy_uri = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
+    # Render entrega el esquema viejo "postgres://"; SQLAlchemy 1.4+ solo
+    # acepta "postgresql://".
+    sqlalchemy_uri = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 else:
-    sqlalchemy_uri = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    sqlalchemy_uri = "sqlite:///gestar.db"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = sqlalchemy_uri
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
