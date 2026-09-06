@@ -24,6 +24,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
   const [alerts, setAlerts] = useState([]);
   const [nurses, setNurses] = useState([]);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const withSessionGuard = (fn) => async (...args) => {
     try {
@@ -78,9 +79,25 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
     if (activeView === "alerts") loadAlerts();
   }, [activeView]);
 
+  const handleNavClick = (id) => {
+    setActiveView(id);
+    setSidebarOpen(false);
+  };
+
   return (
     <div className="min-h-screen w-full flex bg-gray-50">
-      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col shrink-0">
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-100 flex flex-col shrink-0 transform transition-transform duration-200 md:static md:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-2">
           <span className="text-2xl">👩‍⚕️</span>
           <span className="font-bold text-purple-700">GESTAR+</span>
@@ -96,7 +113,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
-              onClick={() => setActiveView(item.id)}
+              onClick={() => handleNavClick(item.id)}
               className={`sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 ${
                 activeView === item.id ? "active bg-purple-50 text-purple-700" : ""
               }`}
@@ -117,7 +134,19 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
         </div>
       </aside>
 
-      <main className="flex-1 p-8 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="md:hidden flex items-center gap-3 bg-white border-b border-gray-100 px-4 py-3 sticky top-0 z-20">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Abrir menú"
+            className="text-xl px-2 py-1 rounded-lg hover:bg-gray-50"
+          >
+            ☰
+          </button>
+          <span className="font-bold text-purple-700">GESTAR+</span>
+        </header>
+
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         {activeView === "register" && (
           <RegisterUserForm
             onPatientCreated={(p) => setPatients((prev) => [...prev, p])}
@@ -151,7 +180,8 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
           />
         )}
         {activeView === "alerts" && <AlertsPanel alerts={alerts} />}
-      </main>
+        </main>
+      </div>
 
       <ConfirmLogoutModal
         open={showLogoutConfirm}
