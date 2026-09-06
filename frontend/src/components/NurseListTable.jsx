@@ -4,12 +4,11 @@ export default function NurseListTable({ nurses }) {
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Enfermeros/as registrados</h2>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[480px] text-sm text-left">
+          <table className="w-full min-w-[420px] text-sm text-left">
             <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <th className="px-4 py-3 font-medium">Nombre</th>
                 <th className="px-4 py-3 font-medium">Apellido</th>
-                <th className="px-4 py-3 font-medium">DNI</th>
                 <th className="px-4 py-3 font-medium">Email</th>
               </tr>
             </thead>
@@ -18,7 +17,6 @@ export default function NurseListTable({ nurses }) {
                 <tr key={n.id}>
                   <td className="px-4 py-3">{n.nombre}</td>
                   <td className="px-4 py-3">{n.apellido}</td>
-                  <td className="px-4 py-3">{n.dni}</td>
                   <td className="px-4 py-3">{n.email}</td>
                 </tr>
               ))}
