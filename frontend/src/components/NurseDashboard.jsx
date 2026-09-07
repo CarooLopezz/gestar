@@ -4,6 +4,7 @@ import RegisterUserForm from "./RegisterUserForm";
 import PatientListTable from "./PatientListTable";
 import BloodPressureForm from "./BloodPressureForm";
 import WeightForm from "./WeightForm";
+import SymptomsFormNurse from "./SymptomsFormNurse";
 import AlertsPanel from "./AlertsPanel";
 import NurseListTable from "./NurseListTable";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
@@ -13,6 +14,7 @@ const NAV_ITEMS = [
   { id: "list", label: "Lista de usuarios", icon: "📋" },
   { id: "bp", label: "Registrar presión arterial", icon: "🩺" },
   { id: "weight", label: "Registrar peso", icon: "⚖️" },
+  { id: "symptoms", label: "Registrar síntomas", icon: "🤒" },
   { id: "alerts", label: "Alertas", icon: "🚨" },
 ];
 
@@ -21,6 +23,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
   const [patients, setPatients] = useState([]);
   const [bpRecords, setBpRecords] = useState([]);
   const [weightRecords, setWeightRecords] = useState([]);
+  const [symptomRecords, setSymptomRecords] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [nurses, setNurses] = useState([]);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -51,6 +54,10 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
     setWeightRecords(await api.getWeights());
   });
 
+  const loadSymptomRecords = withSessionGuard(async () => {
+    setSymptomRecords(await api.getAllSymptoms());
+  });
+
   const loadAlerts = withSessionGuard(async () => {
     setAlerts(await api.getAlerts());
   });
@@ -75,6 +82,10 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
     if (activeView === "weight") {
       loadPatients();
       loadWeightRecords();
+    }
+    if (activeView === "symptoms") {
+      loadPatients();
+      loadSymptomRecords();
     }
     if (activeView === "alerts") loadAlerts();
   }, [activeView]);
@@ -176,6 +187,14 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
               setWeightRecords((prev) => [r, ...prev]);
               if (r.alerta) setAlerts((prev) => [r, ...prev]);
             }}
+            showToast={showToast}
+          />
+        )}
+        {activeView === "symptoms" && (
+          <SymptomsFormNurse
+            patients={patients}
+            symptomRecords={symptomRecords}
+            onRecordCreated={(r) => setSymptomRecords((prev) => [r, ...prev])}
             showToast={showToast}
           />
         )}

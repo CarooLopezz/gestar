@@ -36,6 +36,7 @@ export const api = {
     request("/login", { method: "POST", body: JSON.stringify(payload) }),
 
   getSymptoms: (dni) => request(`/symptoms/${encodeURIComponent(dni)}`),
+  getAllSymptoms: () => request("/symptoms"),
   createSymptomRecord: (payload) =>
     request("/symptoms", { method: "POST", body: JSON.stringify(payload) }),
 

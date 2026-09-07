@@ -2,6 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, jsonify, request
 
+from auth import nurse_required
 from extensions import db
 from models import Patient, SymptomRecord
 
@@ -20,6 +21,21 @@ SINTOMAS_VALIDOS = {
 def now_fecha_hora():
     now = datetime.now()
     return now.strftime("%d/%m/%Y"), now.strftime("%H:%M")
+
+
+@symptoms_bp.route("/api/symptoms", methods=["GET"])
+@nurse_required
+def get_all_symptoms():
+    records = SymptomRecord.query.order_by(SymptomRecord.id.desc()).all()
+    patients_by_dni = {p.dni: p for p in Patient.query.all()}
+
+    result = []
+    for r in records:
+        data = r.to_dict()
+        patient = patients_by_dni.get(r.patient_dni)
+        data["patient_name"] = f"{patient.nombre} {patient.apellido}" if patient else r.patient_dni
+        result.append(data)
+    return jsonify(result), 200
 
 
 @symptoms_bp.route("/api/symptoms/<dni>", methods=["GET"])

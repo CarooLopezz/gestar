@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 
+const PESO_MIN = 40;
+const PESO_MAX = 200;
+
 export default function RecordWeight({ patient, showToast }) {
   const [peso, setPeso] = useState("");
   const [errors, setErrors] = useState({});
   const [records, setRecords] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+
+  const pesoNum = Number(peso);
+  const pesoFueraDeRango = peso !== "" && (Number.isNaN(pesoNum) || pesoNum < PESO_MIN || pesoNum > PESO_MAX);
 
   const loadHistory = async () => {
     try {
@@ -28,7 +34,7 @@ export default function RecordWeight({ patient, showToast }) {
       setPeso("");
       showToast(
         record.alerta
-          ? "Peso registrado. ⚠ Notamos un aumento brusco, le avisamos a tu enfermera."
+          ? "Peso registrado. ⚠ Alerta: aumento brusco, le avisamos a tu enfermera."
           : "Peso registrado correctamente."
       );
       loadHistory();
@@ -55,8 +61,17 @@ export default function RecordWeight({ patient, showToast }) {
               step="0.1"
               value={peso}
               onChange={(e) => setPeso(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
+              className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
+                pesoFueraDeRango
+                  ? "border-red-400 bg-red-50 text-red-700 focus:ring-red-300"
+                  : "border-gray-200 focus:ring-pink-300"
+              }`}
             />
+            {pesoFueraDeRango && !errors.peso && (
+              <p className="text-red-500 text-xs mt-1">
+                Debe estar entre {PESO_MIN} y {PESO_MAX} kg
+              </p>
+            )}
             {errors.peso && <p className="text-red-500 text-xs mt-1">{errors.peso}</p>}
           </div>
 
@@ -83,7 +98,7 @@ export default function RecordWeight({ patient, showToast }) {
                 <p className="text-sm text-gray-600">{r.peso} kg</p>
                 {r.alerta && (
                   <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                    ⚠ Aumento brusco
+                    ⚠ Alerta: aumento brusco
                   </span>
                 )}
               </div>

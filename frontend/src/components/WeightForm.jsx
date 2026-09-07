@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { api } from "../api/client";
 
+const PESO_MIN = 40;
+const PESO_MAX = 200;
+
 export default function WeightForm({ patients, weightRecords, onRecordCreated, showToast }) {
   const [patientId, setPatientId] = useState("");
   const [peso, setPeso] = useState("");
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  const pesoNum = Number(peso);
+  const pesoFueraDeRango = peso !== "" && (Number.isNaN(pesoNum) || pesoNum < PESO_MIN || pesoNum > PESO_MAX);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +26,7 @@ export default function WeightForm({ patients, weightRecords, onRecordCreated, s
       setPeso("");
       showToast(
         record.alerta
-          ? "Peso registrado. ⚠ Aumento brusco, se generó una alerta."
+          ? "Peso registrado. ⚠ Alerta: aumento brusco."
           : "Peso registrado correctamente"
       );
     } catch (err) {
@@ -66,8 +72,17 @@ export default function WeightForm({ patients, weightRecords, onRecordCreated, s
             step="0.1"
             value={peso}
             onChange={(e) => setPeso(e.target.value)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
+              pesoFueraDeRango
+                ? "border-red-400 bg-red-50 text-red-700 focus:ring-red-300"
+                : "border-gray-200 focus:ring-purple-300"
+            }`}
           />
+          {pesoFueraDeRango && !errors.peso && (
+            <p className="text-red-500 text-xs mt-1">
+              Debe estar entre {PESO_MIN} y {PESO_MAX} kg
+            </p>
+          )}
           {errors.peso && <p className="text-red-500 text-xs mt-1">{errors.peso}</p>}
         </div>
 
@@ -102,7 +117,7 @@ export default function WeightForm({ patients, weightRecords, onRecordCreated, s
                 <td className="px-4 py-3">
                   {r.alerta && (
                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                      ⚠ Aumento brusco
+                      ⚠ Alerta: aumento brusco
                     </span>
                   )}
                 </td>
