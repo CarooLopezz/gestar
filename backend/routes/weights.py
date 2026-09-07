@@ -100,7 +100,7 @@ def get_alerts():
             "fecha": r.fecha,
             "hora": r.hora,
             "detalle": f"{r.sistolica}/{r.diastolica} mmHg",
-            "motivo": "Presión fuera de rango seguro",
+            "motivo": "Presión por encima de 120/80 (valor normal)",
         }
         for r in bp_alerts
     ]

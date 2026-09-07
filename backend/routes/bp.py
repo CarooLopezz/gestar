@@ -8,6 +8,9 @@ from models import Patient, BPRecord
 
 bp_bp = Blueprint("bp", __name__)
 
+SISTOLICA_MAX_ALERTA = 120
+DIASTOLICA_MAX_ALERTA = 80
+
 
 def now_fecha_hora():
     now = datetime.now()
@@ -19,19 +22,25 @@ def validate_bp_values(sistolica, diastolica):
 
     try:
         sistolica = int(sistolica)
-        if sistolica < 80 or sistolica > 200:
-            errors["sistolica"] = "Entre 80 y 200"
+        if sistolica <= 0:
+            errors["sistolica"] = "Tiene que ser un valor positivo"
     except (TypeError, ValueError):
-        errors["sistolica"] = "Entre 80 y 200"
+        errors["sistolica"] = "Tiene que ser un valor positivo"
 
     try:
         diastolica = int(diastolica)
-        if diastolica < 50 or diastolica > 130:
-            errors["diastolica"] = "Entre 50 y 130"
+        if diastolica <= 0:
+            errors["diastolica"] = "Tiene que ser un valor positivo"
     except (TypeError, ValueError):
-        errors["diastolica"] = "Entre 50 y 130"
+        errors["diastolica"] = "Tiene que ser un valor positivo"
 
     return sistolica, diastolica, errors
+
+
+def bp_alerta(sistolica, diastolica):
+    # Presión normal: hasta 120/80. Por encima de cualquiera de los dos
+    # valores se considera presión alta y genera alerta.
+    return sistolica > SISTOLICA_MAX_ALERTA or diastolica > DIASTOLICA_MAX_ALERTA
 
 
 @bp_bp.route("/api/bp", methods=["GET"])
@@ -63,6 +72,7 @@ def create_bp_record():
         hora=hora,
         sistolica=sistolica,
         diastolica=diastolica,
+        alerta=bp_alerta(sistolica, diastolica),
     )
     db.session.add(record)
     db.session.commit()
@@ -94,6 +104,7 @@ def create_own_bp_record():
         hora=hora,
         sistolica=sistolica,
         diastolica=diastolica,
+        alerta=bp_alerta(sistolica, diastolica),
     )
     db.session.add(record)
     db.session.commit()
