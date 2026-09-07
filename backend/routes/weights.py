@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request
 
 from auth import nurse_required
 from extensions import db
-from models import BPRecord, Patient, WeightRecord
+from models import BPRecord, Patient, SymptomRecord, WeightRecord
 
 weights_bp = Blueprint("weights", __name__)
 
@@ -80,6 +80,8 @@ def create_weight_record():
 def get_alerts():
     weight_alerts = WeightRecord.query.filter_by(alerta=True).all()
     bp_alerts = BPRecord.query.filter_by(alerta=True).all()
+    symptom_alerts = SymptomRecord.query.all()
+    patients_by_dni = {p.dni: p for p in Patient.query.all()}
 
     alerts = [
         {
@@ -103,6 +105,21 @@ def get_alerts():
             "motivo": "Presión por encima de 120/80 (valor normal)",
         }
         for r in bp_alerts
+    ] + [
+        {
+            "tipo": "sintoma",
+            "id": r.id,
+            "patient_name": (
+                f"{patients_by_dni[r.patient_dni].nombre} {patients_by_dni[r.patient_dni].apellido}"
+                if r.patient_dni in patients_by_dni
+                else r.patient_dni
+            ),
+            "fecha": r.fecha,
+            "hora": r.hora,
+            "detalle": ", ".join(r.symptoms),
+            "motivo": "Síntomas reportados por la paciente",
+        }
+        for r in symptom_alerts
     ]
 
     def sort_key(a):
