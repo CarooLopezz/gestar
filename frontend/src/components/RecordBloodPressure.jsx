@@ -7,6 +7,7 @@ export default function RecordBloodPressure({ patient, showToast }) {
   const [errors, setErrors] = useState({});
   const [records, setRecords] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const loadHistory = async () => {
     try {
@@ -25,14 +26,18 @@ export default function RecordBloodPressure({ patient, showToast }) {
     setErrors({});
     setSubmitting(true);
     try {
-      await api.createOwnBPRecord({
+      const record = await api.createOwnBPRecord({
         patient_dni: patient.dni,
         sistolica,
         diastolica,
       });
       setSistolica("");
       setDiastolica("");
-      showToast("Presión registrada correctamente.");
+      showToast(
+        record.alerta
+          ? "Presión registrada. ⚠ Notamos un valor fuera de rango, le avisamos a tu enfermera."
+          : "Presión registrada correctamente."
+      );
       loadHistory();
     } catch (err) {
       if (err.data?.errors) {
@@ -52,7 +57,7 @@ export default function RecordBloodPressure({ patient, showToast }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Sistólica</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Sistólica (la máxima)</label>
               <input
                 type="number"
                 value={sistolica}
@@ -62,7 +67,7 @@ export default function RecordBloodPressure({ patient, showToast }) {
               {errors.sistolica && <p className="text-red-500 text-xs mt-1">{errors.sistolica}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Diastólica</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Diastólica (la mínima)</label>
               <input
                 type="number"
                 value={diastolica}
@@ -86,19 +91,36 @@ export default function RecordBloodPressure({ patient, showToast }) {
       <div className="w-full max-w-lg mb-8">
         <h3 className="font-medium text-gray-700 mb-3">Historial de presión arterial</h3>
         <div className="space-y-3">
-          {records.map((r) => (
+          {(showAll ? records : records.slice(0, 1)).map((r) => (
             <div key={r.id} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
               <div className="flex justify-between text-xs text-gray-400 mb-2">
                 <span>{r.fecha}</span>
                 <span>{r.hora}</span>
               </div>
-              <p className="text-sm text-gray-600">
-                {r.sistolica} / {r.diastolica} mmHg
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  {r.sistolica} / {r.diastolica} mmHg
+                </p>
+                {r.alerta && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                    ⚠ Fuera de rango
+                  </span>
+                )}
+              </div>
             </div>
           ))}
           {records.length === 0 && (
             <p className="text-center text-gray-400 py-6 text-sm">Sin registros.</p>
+          )}
+          {records.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="w-full flex items-center justify-center gap-1 text-sm text-pink-600 hover:text-pink-700 py-2"
+            >
+              <span className="text-base leading-none">{showAll ? "−" : "+"}</span>
+              {showAll ? "Ver menos" : "Ver más"}
+            </button>
           )}
         </div>
       </div>

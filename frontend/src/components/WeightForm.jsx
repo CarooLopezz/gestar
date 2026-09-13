@@ -9,6 +9,7 @@ export default function WeightForm({ patients, weightRecords, onRecordCreated, s
   const [peso, setPeso] = useState("");
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const pesoNum = Number(peso);
   const pesoFueraDeRango = peso !== "" && (Number.isNaN(pesoNum) || pesoNum < PESO_MIN || pesoNum > PESO_MAX);
@@ -108,7 +109,7 @@ export default function WeightForm({ patients, weightRecords, onRecordCreated, s
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {weightRecords.map((r) => (
+            {(showAll ? weightRecords : weightRecords.slice(0, 1)).map((r) => (
               <tr key={r.id} className={r.alerta ? "bg-red-50" : ""}>
                 <td className="px-4 py-3">{r.patient_name}</td>
                 <td className="px-4 py-3">{r.fecha}</td>
@@ -127,6 +128,16 @@ export default function WeightForm({ patients, weightRecords, onRecordCreated, s
         </table>
         {weightRecords.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm">Sin registros.</p>
+        )}
+        {weightRecords.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setShowAll((v) => !v)}
+            className="w-full flex items-center justify-center gap-1 text-sm text-purple-600 hover:text-purple-700 py-3 border-t border-gray-100"
+          >
+            <span className="text-base leading-none">{showAll ? "−" : "+"}</span>
+            {showAll ? "Ver menos" : "Ver más"}
+          </button>
         )}
       </div>
     </div>

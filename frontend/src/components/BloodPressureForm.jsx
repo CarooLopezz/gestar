@@ -7,6 +7,7 @@ export default function BloodPressureForm({ patients, bpRecords, onRecordCreated
   const [diastolica, setDiastolica] = useState("");
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +22,11 @@ export default function BloodPressureForm({ patients, bpRecords, onRecordCreated
       onRecordCreated(record);
       setSistolica("");
       setDiastolica("");
-      showToast("Presión registrada correctamente");
+      showToast(
+        record.alerta
+          ? "Presión registrada. ⚠ Está fuera de rango seguro, se generó una alerta."
+          : "Presión registrada correctamente"
+      );
     } catch (err) {
       if (err.data?.errors) {
         setErrors(err.data.errors);
@@ -60,7 +65,7 @@ export default function BloodPressureForm({ patients, bpRecords, onRecordCreated
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Sistólica</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Sistólica (la máxima)</label>
             <input
               type="number"
               value={sistolica}
@@ -70,7 +75,7 @@ export default function BloodPressureForm({ patients, bpRecords, onRecordCreated
             {errors.sistolica && <p className="text-red-500 text-xs mt-1">{errors.sistolica}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Diastólica</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Diastólica (la mínima)</label>
             <input
               type="number"
               value={diastolica}
@@ -100,22 +105,40 @@ export default function BloodPressureForm({ patients, bpRecords, onRecordCreated
               <th className="px-4 py-3 font-medium">Hora</th>
               <th className="px-4 py-3 font-medium">Sistólica</th>
               <th className="px-4 py-3 font-medium">Diastólica</th>
+              <th className="px-4 py-3 font-medium"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {bpRecords.map((r) => (
-              <tr key={r.id}>
+            {(showAll ? bpRecords : bpRecords.slice(0, 1)).map((r) => (
+              <tr key={r.id} className={r.alerta ? "bg-red-50" : ""}>
                 <td className="px-4 py-3">{r.patient_name}</td>
                 <td className="px-4 py-3">{r.fecha}</td>
                 <td className="px-4 py-3">{r.hora}</td>
                 <td className="px-4 py-3">{r.sistolica}</td>
                 <td className="px-4 py-3">{r.diastolica}</td>
+                <td className="px-4 py-3">
+                  {r.alerta && (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                      ⚠ Fuera de rango
+                    </span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
         {bpRecords.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm">Sin registros.</p>
+        )}
+        {bpRecords.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setShowAll((v) => !v)}
+            className="w-full flex items-center justify-center gap-1 text-sm text-purple-600 hover:text-purple-700 py-3 border-t border-gray-100"
+          >
+            <span className="text-base leading-none">{showAll ? "−" : "+"}</span>
+            {showAll ? "Ver menos" : "Ver más"}
+          </button>
         )}
       </div>
     </div>

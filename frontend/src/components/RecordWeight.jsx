@@ -9,6 +9,7 @@ export default function RecordWeight({ patient, showToast }) {
   const [errors, setErrors] = useState({});
   const [records, setRecords] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const pesoNum = Number(peso);
   const pesoFueraDeRango = peso !== "" && (Number.isNaN(pesoNum) || pesoNum < PESO_MIN || pesoNum > PESO_MAX);
@@ -88,7 +89,7 @@ export default function RecordWeight({ patient, showToast }) {
       <div className="w-full max-w-lg mb-8">
         <h3 className="font-medium text-gray-700 mb-3">Historial de peso</h3>
         <div className="space-y-3">
-          {records.map((r) => (
+          {(showAll ? records : records.slice(0, 1)).map((r) => (
             <div key={r.id} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
               <div className="flex justify-between text-xs text-gray-400 mb-2">
                 <span>{r.fecha}</span>
@@ -106,6 +107,16 @@ export default function RecordWeight({ patient, showToast }) {
           ))}
           {records.length === 0 && (
             <p className="text-center text-gray-400 py-6 text-sm">Sin registros.</p>
+          )}
+          {records.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="w-full flex items-center justify-center gap-1 text-sm text-pink-600 hover:text-pink-700 py-2"
+            >
+              <span className="text-base leading-none">{showAll ? "−" : "+"}</span>
+              {showAll ? "Ver menos" : "Ver más"}
+            </button>
           )}
         </div>
       </div>
