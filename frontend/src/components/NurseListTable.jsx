@@ -1,6 +1,46 @@
 import { useMemo, useState } from "react";
 import { api } from "../api/client";
 
+function ActionIcons({ isBusy, confirming, onEdit, onAskDelete, onConfirmDelete, onCancelDelete }) {
+  if (confirming) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-500">¿Eliminar?</span>
+        <button
+          onClick={onConfirmDelete}
+          disabled={isBusy}
+          className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+        >
+          Sí
+        </button>
+        <button onClick={onCancelDelete} className="text-xs font-medium text-gray-400 hover:text-gray-600">
+          No
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={onEdit}
+        title="Editar"
+        aria-label="Editar"
+        className="w-7 h-7 flex items-center justify-center rounded-full text-purple-600 hover:bg-purple-50"
+      >
+        ✏️
+      </button>
+      <button
+        onClick={onAskDelete}
+        title="Eliminar"
+        aria-label="Eliminar"
+        className="w-7 h-7 flex items-center justify-center rounded-full text-red-500 hover:bg-red-50"
+      >
+        🗑️
+      </button>
+    </div>
+  );
+}
+
 export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated, onNurseDeleted, showToast }) {
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState(null);
@@ -62,6 +102,47 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
     }
   };
 
+  const EditFields = ({ stacked }) => (
+    <div className={stacked ? "space-y-2" : "contents"}>
+      <div>
+        {stacked && <label className="text-xs text-gray-400">Nombre</label>}
+        <input
+          value={editForm.nombre}
+          onChange={(e) => setEditForm((f) => ({ ...f, nombre: e.target.value }))}
+          className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+        />
+        {editErrors.nombre && <p className="text-red-500 text-xs mt-1">{editErrors.nombre}</p>}
+      </div>
+      <div>
+        {stacked && <label className="text-xs text-gray-400">Apellido</label>}
+        <input
+          value={editForm.apellido}
+          onChange={(e) => setEditForm((f) => ({ ...f, apellido: e.target.value }))}
+          className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+        />
+        {editErrors.apellido && <p className="text-red-500 text-xs mt-1">{editErrors.apellido}</p>}
+      </div>
+      <div>
+        {stacked && <label className="text-xs text-gray-400">DNI</label>}
+        <input
+          value={editForm.dni}
+          onChange={(e) => setEditForm((f) => ({ ...f, dni: e.target.value }))}
+          className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+        />
+        {editErrors.dni && <p className="text-red-500 text-xs mt-1">{editErrors.dni}</p>}
+      </div>
+      <div>
+        {stacked && <label className="text-xs text-gray-400">Email</label>}
+        <input
+          value={editForm.email}
+          onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+          className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+        />
+        {editErrors.email && <p className="text-red-500 text-xs mt-1">{editErrors.email}</p>}
+      </div>
+    </div>
+  );
+
   return (
     <div className="fade-in">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Enfermeros/as registrados</h2>
@@ -72,7 +153,9 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
         placeholder="Buscar por nombre, apellido, DNI o email..."
         className="w-full max-w-3xl border border-gray-200 rounded-lg px-3 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
       />
-      <div className="max-w-3xl bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+      {/* Desktop: tabla */}
+      <div className="hidden md:block max-w-3xl bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm text-left">
             <thead className="bg-gray-50 text-gray-500">
@@ -92,37 +175,10 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
                   <tr key={n.id}>
                     {isEditing ? (
                       <>
-                        <td className="px-4 py-2">
-                          <input
-                            value={editForm.nombre}
-                            onChange={(e) => setEditForm((f) => ({ ...f, nombre: e.target.value }))}
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-                          />
-                          {editErrors.nombre && <p className="text-red-500 text-xs mt-1">{editErrors.nombre}</p>}
-                        </td>
-                        <td className="px-4 py-2">
-                          <input
-                            value={editForm.apellido}
-                            onChange={(e) => setEditForm((f) => ({ ...f, apellido: e.target.value }))}
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-                          />
-                          {editErrors.apellido && <p className="text-red-500 text-xs mt-1">{editErrors.apellido}</p>}
-                        </td>
-                        <td className="px-4 py-2">
-                          <input
-                            value={editForm.dni}
-                            onChange={(e) => setEditForm((f) => ({ ...f, dni: e.target.value }))}
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-                          />
-                          {editErrors.dni && <p className="text-red-500 text-xs mt-1">{editErrors.dni}</p>}
-                        </td>
-                        <td className="px-4 py-2">
-                          <input
-                            value={editForm.email}
-                            onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
-                            className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-                          />
-                          {editErrors.email && <p className="text-red-500 text-xs mt-1">{editErrors.email}</p>}
+                        <td className="px-4 py-2" colSpan={4}>
+                          <div className="grid grid-cols-4 gap-2">
+                            <EditFields />
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
@@ -133,10 +189,7 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
                             >
                               Guardar
                             </button>
-                            <button
-                              onClick={cancelEdit}
-                              className="text-xs font-medium text-gray-400 hover:text-gray-600"
-                            >
+                            <button onClick={cancelEdit} className="text-xs font-medium text-gray-400 hover:text-gray-600">
                               Cancelar
                             </button>
                           </div>
@@ -149,40 +202,14 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
                         <td className="px-4 py-3">{n.dni}</td>
                         <td className="px-4 py-3">{n.email}</td>
                         <td className="px-4 py-3">
-                          {confirmDeleteId === n.id ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500">¿Eliminar?</span>
-                              <button
-                                onClick={() => confirmDelete(n.id)}
-                                disabled={isBusy}
-                                className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
-                              >
-                                Sí
-                              </button>
-                              <button
-                                onClick={() => setConfirmDeleteId(null)}
-                                className="text-xs font-medium text-gray-400 hover:text-gray-600"
-                              >
-                                No
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex gap-3">
-                              <button
-                                onClick={() => startEdit(n)}
-                                className="text-xs font-medium text-purple-600 hover:text-purple-800"
-                              >
-                                Editar
-                              </button>
-                              <button
-                                onClick={() => setConfirmDeleteId(n.id)}
-                                className="text-xs font-medium text-red-500 hover:text-red-700"
-                                title={n.id === currentNurseId ? "Esta es tu propia cuenta" : undefined}
-                              >
-                                Eliminar
-                              </button>
-                            </div>
-                          )}
+                          <ActionIcons
+                            isBusy={isBusy}
+                            confirming={confirmDeleteId === n.id}
+                            onEdit={() => startEdit(n)}
+                            onAskDelete={() => setConfirmDeleteId(n.id)}
+                            onConfirmDelete={() => confirmDelete(n.id)}
+                            onCancelDelete={() => setConfirmDeleteId(null)}
+                          />
                         </td>
                       </>
                     )}
@@ -197,6 +224,63 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
         )}
         {nurses.length > 0 && filtered.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm">Sin resultados para "{search}".</p>
+        )}
+      </div>
+
+      {/* Mobile: tarjetas */}
+      <div className="md:hidden space-y-3">
+        {filtered.map((n) => {
+          const isEditing = editingId === n.id;
+          const isBusy = busyId === n.id;
+          return (
+            <div key={n.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+              {isEditing ? (
+                <>
+                  <EditFields stacked />
+                  <div className="flex gap-3 mt-3">
+                    <button
+                      onClick={() => saveEdit(n.id)}
+                      disabled={isBusy}
+                      className="text-xs font-medium text-purple-600 hover:text-purple-800 disabled:opacity-50"
+                    >
+                      Guardar
+                    </button>
+                    <button onClick={cancelEdit} className="text-xs font-medium text-gray-400 hover:text-gray-600">
+                      Cancelar
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium text-gray-800">
+                    {n.nombre} {n.apellido}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">DNI {n.dni}</p>
+                  <p className="text-xs text-gray-400">{n.email}</p>
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <ActionIcons
+                      isBusy={isBusy}
+                      confirming={confirmDeleteId === n.id}
+                      onEdit={() => startEdit(n)}
+                      onAskDelete={() => setConfirmDeleteId(n.id)}
+                      onConfirmDelete={() => confirmDelete(n.id)}
+                      onCancelDelete={() => setConfirmDeleteId(null)}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+        {nurses.length === 0 && (
+          <p className="text-center text-gray-400 py-8 text-sm bg-white rounded-2xl border border-gray-100">
+            No hay enfermeros/as registrados.
+          </p>
+        )}
+        {nurses.length > 0 && filtered.length === 0 && (
+          <p className="text-center text-gray-400 py-8 text-sm bg-white rounded-2xl border border-gray-100">
+            Sin resultados para "{search}".
+          </p>
         )}
       </div>
     </div>

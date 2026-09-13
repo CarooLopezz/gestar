@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { api } from "../api/client";
 
 const PESO_MIN = 40;
@@ -9,10 +9,32 @@ export default function WeightForm({ patients, weightRecords, onRecordCreated, s
   const [peso, setPeso] = useState("");
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [expanded, setExpanded] = useState(() => new Set());
 
   const pesoNum = Number(peso);
   const pesoFueraDeRango = peso !== "" && (Number.isNaN(pesoNum) || pesoNum < PESO_MIN || pesoNum > PESO_MAX);
+
+  // weightRecords ya viene ordenado del mas reciente al mas viejo; agrupar
+  // por paciente conserva ese orden dentro de cada grupo.
+  const groups = useMemo(() => {
+    const map = new Map();
+    weightRecords.forEach((r) => {
+      if (!map.has(r.patient_id)) {
+        map.set(r.patient_id, { patient_id: r.patient_id, patient_name: r.patient_name, records: [] });
+      }
+      map.get(r.patient_id).records.push(r);
+    });
+    return Array.from(map.values());
+  }, [weightRecords]);
+
+  const toggleExpanded = (patientId) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(patientId)) next.delete(patientId);
+      else next.add(patientId);
+      return next;
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,47 +119,65 @@ export default function WeightForm({ patients, weightRecords, onRecordCreated, s
       </form>
 
       <h3 className="text-lg font-semibold text-gray-800 mb-3">Historial de peso</h3>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-gray-50 text-gray-500">
-            <tr>
-              <th className="px-4 py-3 font-medium">Paciente</th>
-              <th className="px-4 py-3 font-medium">Fecha</th>
-              <th className="px-4 py-3 font-medium">Hora</th>
-              <th className="px-4 py-3 font-medium">Peso (kg)</th>
-              <th className="px-4 py-3 font-medium"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {(showAll ? weightRecords : weightRecords.slice(0, 1)).map((r) => (
-              <tr key={r.id} className={r.alerta ? "bg-red-50" : ""}>
-                <td className="px-4 py-3">{r.patient_name}</td>
-                <td className="px-4 py-3">{r.fecha}</td>
-                <td className="px-4 py-3">{r.hora}</td>
-                <td className="px-4 py-3">{r.peso}</td>
-                <td className="px-4 py-3">
-                  {r.alerta && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                      ⚠ Alerta: aumento brusco
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="space-y-3">
+        {groups.map((g) => {
+          const [latest, ...previous] = g.records;
+          const isOpen = expanded.has(g.patient_id);
+          return (
+            <div key={g.patient_id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+              <div className="flex items-center justify-between">
+                <p className="font-medium text-gray-800">{g.patient_name}</p>
+                {previous.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(g.patient_id)}
+                    className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700"
+                  >
+                    <span className="text-sm leading-none">{isOpen ? "−" : "+"}</span>
+                    {isOpen ? "Ver menos" : "Ver más"}
+                  </button>
+                )}
+              </div>
+
+              <div className={`flex items-center justify-between mt-2 rounded-lg px-3 py-2 ${latest.alerta ? "bg-red-50" : "bg-gray-50"}`}>
+                <span className="text-xs text-gray-500">
+                  {latest.fecha} {latest.hora}
+                </span>
+                <span className="text-sm text-gray-700">{latest.peso} kg</span>
+                {latest.alerta && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                    ⚠ Alerta: aumento brusco
+                  </span>
+                )}
+              </div>
+
+              {isOpen && (
+                <div className="mt-2 space-y-2">
+                  {previous.map((r) => (
+                    <div
+                      key={r.id}
+                      className={`flex items-center justify-between rounded-lg px-3 py-2 ${r.alerta ? "bg-red-50" : "bg-gray-50"}`}
+                    >
+                      <span className="text-xs text-gray-500">
+                        {r.fecha} {r.hora}
+                      </span>
+                      <span className="text-sm text-gray-700">{r.peso} kg</span>
+                      {r.alerta && (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                          ⚠ Alerta: aumento brusco
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
         {weightRecords.length === 0 && (
-          <p className="text-center text-gray-400 py-8 text-sm">Sin registros.</p>
-        )}
-        {weightRecords.length > 1 && (
-          <button
-            type="button"
-            onClick={() => setShowAll((v) => !v)}
-            className="w-full flex items-center justify-center gap-1 text-sm text-purple-600 hover:text-purple-700 py-3 border-t border-gray-100"
-          >
-            <span className="text-base leading-none">{showAll ? "−" : "+"}</span>
-            {showAll ? "Ver menos" : "Ver más"}
-          </button>
+          <p className="text-center text-gray-400 py-8 text-sm bg-white rounded-2xl border border-gray-100">
+            Sin registros.
+          </p>
         )}
       </div>
     </div>

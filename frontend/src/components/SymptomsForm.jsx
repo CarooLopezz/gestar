@@ -13,9 +13,9 @@ const SINTOMAS = [
 const GRAVEDADES = ["Leve", "Moderado", "Severo"];
 
 const GRAVEDAD_COLOR = {
-  Leve: "bg-yellow-50 text-yellow-700",
-  Moderado: "bg-orange-50 text-orange-700",
-  Severo: "bg-red-100 text-red-700",
+  Leve: "bg-green-600 text-white",
+  Moderado: "bg-amber-500 text-white",
+  Severo: "bg-red-600 text-white",
 };
 
 export default function SymptomsForm({ patient, showToast }) {

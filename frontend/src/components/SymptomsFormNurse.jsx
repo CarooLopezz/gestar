@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { api } from "../api/client";
 
 const SINTOMAS = [
@@ -13,9 +13,9 @@ const SINTOMAS = [
 const GRAVEDADES = ["Leve", "Moderado", "Severo"];
 
 const GRAVEDAD_COLOR = {
-  Leve: "bg-yellow-50 text-yellow-700",
-  Moderado: "bg-orange-50 text-orange-700",
-  Severo: "bg-red-100 text-red-700",
+  Leve: "bg-green-600 text-white",
+  Moderado: "bg-amber-500 text-white",
+  Severo: "bg-red-600 text-white",
 };
 
 export default function SymptomsFormNurse({ patients, symptomRecords, onRecordCreated, showToast }) {
@@ -23,7 +23,27 @@ export default function SymptomsFormNurse({ patients, symptomRecords, onRecordCr
   const [selected, setSelected] = useState({});
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [expanded, setExpanded] = useState(() => new Set());
+
+  const groups = useMemo(() => {
+    const map = new Map();
+    symptomRecords.forEach((r) => {
+      if (!map.has(r.patient_dni)) {
+        map.set(r.patient_dni, { patient_dni: r.patient_dni, patient_name: r.patient_name, records: [] });
+      }
+      map.get(r.patient_dni).records.push(r);
+    });
+    return Array.from(map.values());
+  }, [symptomRecords]);
+
+  const toggleExpanded = (dni) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(dni)) next.delete(dni);
+      else next.add(dni);
+      return next;
+    });
+  };
 
   const toggle = (symptom) => {
     setSelected((prev) => {
@@ -150,42 +170,72 @@ export default function SymptomsFormNurse({ patients, symptomRecords, onRecordCr
 
       <h3 className="text-lg font-semibold text-gray-800 mb-3">Historial de síntomas</h3>
       <div className="space-y-3">
-        {(showAll ? symptomRecords : symptomRecords.slice(0, 1)).map((r) => (
-          <div key={r.id} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-            <div className="flex justify-between text-xs text-gray-400 mb-2">
-              <span>{r.patient_name}</span>
-              <span>
-                {r.fecha} {r.hora}
-              </span>
+        {groups.map((g) => {
+          const [latest, ...previous] = g.records;
+          const isOpen = expanded.has(g.patient_dni);
+          return (
+            <div key={g.patient_dni} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium text-gray-800 text-sm">{g.patient_name}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-400">
+                    {latest.fecha} {latest.hora}
+                  </span>
+                  {previous.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => toggleExpanded(g.patient_dni)}
+                      className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700"
+                    >
+                      <span className="text-sm leading-none">{isOpen ? "−" : "+"}</span>
+                      {isOpen ? "Ver menos" : "Ver más"}
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {latest.symptoms.map((s) => (
+                  <span
+                    key={s.nombre}
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      GRAVEDAD_COLOR[s.gravedad] || "bg-purple-50 text-purple-600"
+                    }`}
+                  >
+                    {s.nombre} · {s.gravedad}
+                  </span>
+                ))}
+              </div>
+
+              {isOpen && (
+                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                  {previous.map((r) => (
+                    <div key={r.id}>
+                      <p className="text-xs text-gray-400 mb-1">
+                        {r.fecha} {r.hora}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {r.symptoms.map((s) => (
+                          <span
+                            key={s.nombre}
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              GRAVEDAD_COLOR[s.gravedad] || "bg-purple-50 text-purple-600"
+                            }`}
+                          >
+                            {s.nombre} · {s.gravedad}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="flex flex-wrap gap-2">
-              {r.symptoms.map((s) => (
-                <span
-                  key={s.nombre}
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    GRAVEDAD_COLOR[s.gravedad] || "bg-purple-50 text-purple-600"
-                  }`}
-                >
-                  {s.nombre} · {s.gravedad}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {symptomRecords.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm bg-white rounded-2xl border border-gray-100">
             Sin registros.
           </p>
-        )}
-        {symptomRecords.length > 1 && (
-          <button
-            type="button"
-            onClick={() => setShowAll((v) => !v)}
-            className="w-full flex items-center justify-center gap-1 text-sm text-purple-600 hover:text-purple-700 py-2"
-          >
-            <span className="text-base leading-none">{showAll ? "−" : "+"}</span>
-            {showAll ? "Ver menos" : "Ver más"}
-          </button>
         )}
       </div>
     </div>
