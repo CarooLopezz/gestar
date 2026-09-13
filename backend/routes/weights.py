@@ -80,7 +80,7 @@ def create_weight_record():
 def get_alerts():
     weight_alerts = WeightRecord.query.filter_by(alerta=True).all()
     bp_alerts = BPRecord.query.filter_by(alerta=True).all()
-    symptom_alerts = SymptomRecord.query.all()
+    symptom_alerts = SymptomRecord.query.filter_by(alerta=True).all()
     patients_by_dni = {p.dni: p for p in Patient.query.all()}
 
     alerts = [
@@ -116,8 +116,8 @@ def get_alerts():
             ),
             "fecha": r.fecha,
             "hora": r.hora,
-            "detalle": ", ".join(r.symptoms),
-            "motivo": "Síntomas reportados por la paciente",
+            "detalle": ", ".join(f"{s['nombre']} ({s['gravedad']})" for s in r.symptoms),
+            "motivo": "Síntoma reportado como Severo",
         }
         for r in symptom_alerts
     ]

@@ -17,6 +17,8 @@ SINTOMAS_VALIDOS = {
     "Mareos",
 }
 
+GRAVEDADES_VALIDAS = {"Leve", "Moderado", "Severo"}
+
 
 def now_fecha_hora():
     now = datetime.now()
@@ -48,22 +50,38 @@ def get_symptoms(dni):
     return jsonify([r.to_dict() for r in records]), 200
 
 
+def parse_symptoms(raw_symptoms):
+    """Cada item debe ser {"nombre": <sintoma valido>, "gravedad": Leve|Moderado|Severo}."""
+    symptoms = []
+    for item in raw_symptoms or []:
+        if not isinstance(item, dict):
+            continue
+        nombre = item.get("nombre")
+        gravedad = item.get("gravedad")
+        if nombre in SINTOMAS_VALIDOS and gravedad in GRAVEDADES_VALIDAS:
+            symptoms.append({"nombre": nombre, "gravedad": gravedad})
+    return symptoms
+
+
 @symptoms_bp.route("/api/symptoms", methods=["POST"])
 def create_symptom_record():
     data = request.get_json(force=True, silent=True) or {}
 
     dni = (data.get("patient_dni") or "").strip()
-    symptoms = data.get("symptoms") or []
 
     if not Patient.query.filter_by(dni=dni).first():
         return jsonify({"error": "Paciente no encontrado"}), 404
 
-    symptoms = [s for s in symptoms if s in SINTOMAS_VALIDOS]
+    symptoms = parse_symptoms(data.get("symptoms"))
     if not symptoms:
-        return jsonify({"error": "Seleccioná al menos un síntoma."}), 400
+        return jsonify({"error": "Seleccioná al menos un síntoma con su gravedad."}), 400
+
+    alerta = any(s["gravedad"] == "Severo" for s in symptoms)
 
     fecha, hora = now_fecha_hora()
-    record = SymptomRecord(patient_dni=dni, fecha=fecha, hora=hora, symptoms=symptoms)
+    record = SymptomRecord(
+        patient_dni=dni, fecha=fecha, hora=hora, symptoms=symptoms, alerta=alerta
+    )
     db.session.add(record)
     db.session.commit()
     return jsonify(record.to_dict()), 201
