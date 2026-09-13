@@ -2,7 +2,7 @@ import { useState } from "react";
 import { api } from "../api/client";
 import PasswordInput from "./PasswordInput";
 
-const emptyForm = { nombre: "", apellido: "", email: "", password: "" };
+const emptyForm = { nombre: "", apellido: "", dni: "", email: "", password: "" };
 
 export default function NurseRegisterForm({ onRegistered, onBack, onGoToLogin }) {
   const [form, setForm] = useState(emptyForm);
@@ -36,6 +36,7 @@ export default function NurseRegisterForm({ onRegistered, onBack, onGoToLogin })
       <div className="text-5xl mb-4">👩‍⚕️</div>
       <form
         onSubmit={handleSubmit}
+        noValidate
         className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full max-w-sm space-y-4"
       >
         <Field label="Nombre" error={errors.nombre}>
@@ -54,6 +55,18 @@ export default function NurseRegisterForm({ onRegistered, onBack, onGoToLogin })
             onChange={handleChange("apellido")}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
           />
+        </Field>
+
+        <Field label="DNI" error={errors.dni}>
+          <input
+            type="text"
+            value={form.dni}
+            onChange={handleChange("dni")}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
+          />
+          <p className="text-gray-400 text-xs mt-1">
+            Lo vas a necesitar si alguna vez te olvidás la contraseña.
+          </p>
         </Field>
 
         <Field label="Email" error={errors.email}>

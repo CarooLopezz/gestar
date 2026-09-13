@@ -38,6 +38,7 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
         const nurse = await api.createNurse({
           nombre: form.nombre,
           apellido: form.apellido,
+          dni: form.dni,
           email: form.email,
           password: form.password,
         });
@@ -59,7 +60,7 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
   return (
     <div className="fade-in max-w-lg">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Registrar</h2>
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
         <Field label="Nombre" error={errors.nombre}>
           <input
             type="text"
@@ -78,19 +79,19 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
           />
         </Field>
 
-        {role === "embarazada" && (
-          <Field label="DNI" error={errors.dni}>
-            <input
-              type="text"
-              value={form.dni}
-              onChange={handleChange("dni")}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
-            />
-            <p className="text-gray-400 text-xs mt-1">
-              No hay un campo de contraseña aparte: la paciente va a usar este DNI para ingresar a su portal.
-            </p>
-          </Field>
-        )}
+        <Field label="DNI" error={errors.dni}>
+          <input
+            type="text"
+            value={form.dni}
+            onChange={handleChange("dni")}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
+          />
+          <p className="text-gray-400 text-xs mt-1">
+            {role === "embarazada"
+              ? "No hay un campo de contraseña aparte: la paciente va a usar este DNI para ingresar a su portal."
+              : "Le sirve para recuperar la contraseña si se la olvida."}
+          </p>
+        </Field>
 
         <Field label="Email" error={errors.email}>
           <input

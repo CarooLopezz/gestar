@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import NurseLoginForm from "./NurseLoginForm";
 import NurseRegisterForm from "./NurseRegisterForm";
+import NurseForgotPasswordForm from "./NurseForgotPasswordForm";
 import NurseDashboard from "./NurseDashboard";
 
-// "login" | "register"
+// "login" | "register" | "forgot"
 export default function NursePortal({ onBack, showToast }) {
   const [nurse, setNurse] = useState(null);
   const [authScreen, setAuthScreen] = useState("login");
@@ -46,11 +47,23 @@ export default function NursePortal({ onBack, showToast }) {
         />
       );
     }
+    if (authScreen === "forgot") {
+      return (
+        <NurseForgotPasswordForm
+          onBack={() => setAuthScreen("login")}
+          onDone={() => {
+            showToast("Contraseña actualizada. Iniciá sesión con la nueva.");
+            setAuthScreen("login");
+          }}
+        />
+      );
+    }
     return (
       <NurseLoginForm
         onLogin={setNurse}
         onBack={onBack}
         onGoToRegister={() => setAuthScreen("register")}
+        onGoToForgot={() => setAuthScreen("forgot")}
       />
     );
   }
