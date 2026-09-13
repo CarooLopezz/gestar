@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { api } from "../api/client";
-import PasswordInput from "./PasswordInput";
 
-const emptyForm = { nombre: "", apellido: "", dni: "", email: "", password: "" };
+const emptyForm = { nombre: "", apellido: "", dni: "", email: "" };
 
 export default function RegisterUserForm({ onPatientCreated, onNurseCreated, showToast }) {
   const [role, setRole] = useState("embarazada");
@@ -40,7 +39,6 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
           apellido: form.apellido,
           dni: form.dni,
           email: form.email,
-          password: form.password,
         });
         onNurseCreated(nurse);
         showToast("Enfermero/a registrado correctamente");
@@ -87,9 +85,7 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
             className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
           />
           <p className="text-gray-400 text-xs mt-1">
-            {role === "embarazada"
-              ? "No hay un campo de contraseña aparte: la paciente va a usar este DNI para ingresar a su portal."
-              : "Le sirve para recuperar la contraseña si se la olvida."}
+            No hay un campo de contraseña aparte: va a usar este DNI para ingresar.
           </p>
         </Field>
 
@@ -113,12 +109,6 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
             <option value="enfermero">Enfermero/a</option>
           </select>
         </div>
-
-        {role === "enfermero" && (
-          <Field label="Contraseña" error={errors.password}>
-            <PasswordInput value={form.password} onChange={handleChange("password")} />
-          </Field>
-        )}
 
         {role === "embarazada" && (
           <div>

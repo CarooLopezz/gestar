@@ -2,7 +2,7 @@ import { useState } from "react";
 import { api } from "../api/client";
 import PasswordInput from "./PasswordInput";
 
-export default function NurseLoginForm({ onLogin, onBack, onGoToRegister, onGoToForgot }) {
+export default function NurseLoginForm({ onLogin, onBack, onGoToRegister }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -40,15 +40,9 @@ export default function NurseLoginForm({ onLogin, onBack, onGoToRegister, onGoTo
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">Contraseña</label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Contraseña (tu DNI)</label>
           <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} />
-          <button
-            type="button"
-            onClick={onGoToForgot}
-            className="text-xs text-purple-500 hover:text-purple-700 mt-1"
-          >
-            ¿Olvidaste tu contraseña?
-          </button>
+          <p className="text-gray-400 text-xs mt-1">Usá el DNI con el que te registraste.</p>
         </div>
 
         {error && <p className="text-red-500 text-xs">{error}</p>}

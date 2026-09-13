@@ -54,8 +54,6 @@ export const api = {
     request("/nurse/login", { method: "POST", body: JSON.stringify(payload) }),
   logoutNurse: () => request("/nurse/logout", { method: "POST" }),
   getMe: () => request("/nurse/me"),
-  forgotNursePassword: (payload) =>
-    request("/nurse/forgot-password", { method: "POST", body: JSON.stringify(payload) }),
   updateNurse: (id, payload) =>
     request(`/nurses/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
   deleteNurse: (id) => request(`/nurses/${id}`, { method: "DELETE" }),

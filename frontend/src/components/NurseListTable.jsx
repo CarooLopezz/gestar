@@ -69,16 +69,17 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Buscar por nombre, apellido o email..."
+        placeholder="Buscar por nombre, apellido, DNI o email..."
         className="w-full max-w-3xl border border-gray-200 rounded-lg px-3 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
       />
       <div className="max-w-3xl bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] text-sm text-left">
+          <table className="w-full min-w-[640px] text-sm text-left">
             <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <th className="px-4 py-3 font-medium">Nombre</th>
                 <th className="px-4 py-3 font-medium">Apellido</th>
+                <th className="px-4 py-3 font-medium">DNI</th>
                 <th className="px-4 py-3 font-medium">Email</th>
                 <th className="px-4 py-3 font-medium">Acciones</th>
               </tr>
@@ -106,6 +107,14 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
                             className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
                           />
                           {editErrors.apellido && <p className="text-red-500 text-xs mt-1">{editErrors.apellido}</p>}
+                        </td>
+                        <td className="px-4 py-2">
+                          <input
+                            value={editForm.dni}
+                            onChange={(e) => setEditForm((f) => ({ ...f, dni: e.target.value }))}
+                            className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                          />
+                          {editErrors.dni && <p className="text-red-500 text-xs mt-1">{editErrors.dni}</p>}
                         </td>
                         <td className="px-4 py-2">
                           <input
@@ -137,6 +146,7 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
                       <>
                         <td className="px-4 py-3">{n.nombre}</td>
                         <td className="px-4 py-3">{n.apellido}</td>
+                        <td className="px-4 py-3">{n.dni}</td>
                         <td className="px-4 py-3">{n.email}</td>
                         <td className="px-4 py-3">
                           {confirmDeleteId === n.id ? (

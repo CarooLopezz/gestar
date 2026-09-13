@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { api } from "../api/client";
-import PasswordInput from "./PasswordInput";
 
-const emptyForm = { nombre: "", apellido: "", dni: "", email: "", password: "" };
+const emptyForm = { nombre: "", apellido: "", dni: "", email: "" };
 
 export default function NurseRegisterForm({ onRegistered, onBack, onGoToLogin }) {
   const [form, setForm] = useState(emptyForm);
@@ -65,7 +64,7 @@ export default function NurseRegisterForm({ onRegistered, onBack, onGoToLogin })
             className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
           />
           <p className="text-gray-400 text-xs mt-1">
-            Lo vas a necesitar si alguna vez te olvidás la contraseña.
+            No hay un campo de contraseña aparte: vas a usar este DNI para ingresar.
           </p>
         </Field>
 
@@ -76,10 +75,6 @@ export default function NurseRegisterForm({ onRegistered, onBack, onGoToLogin })
             onChange={handleChange("email")}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
           />
-        </Field>
-
-        <Field label="Contraseña" error={errors.password}>
-          <PasswordInput value={form.password} onChange={handleChange("password")} />
         </Field>
 
         {errors._general && <p className="text-red-500 text-xs">{errors._general}</p>}

@@ -9,7 +9,6 @@ class Nurse(db.Model):
     apellido = db.Column(db.String(100), nullable=False)
     dni = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False, default="enfermero")
 
     def to_dict(self):
