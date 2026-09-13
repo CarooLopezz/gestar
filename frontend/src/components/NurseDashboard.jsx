@@ -167,8 +167,29 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
         )}
         {activeView === "list" && (
           <div className="space-y-8">
-            <PatientListTable patients={patients} />
-            <NurseListTable nurses={nurses} />
+            <PatientListTable
+              patients={patients}
+              onPatientUpdated={(updated) =>
+                setPatients((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+              }
+              onPatientDeleted={(id) => setPatients((prev) => prev.filter((p) => p.id !== id))}
+              showToast={showToast}
+            />
+            <NurseListTable
+              nurses={nurses}
+              currentNurseId={nurse?.id}
+              onNurseUpdated={(updated) =>
+                setNurses((prev) => prev.map((n) => (n.id === updated.id ? updated : n)))
+              }
+              onNurseDeleted={(id) => {
+                setNurses((prev) => prev.filter((n) => n.id !== id));
+                if (id === nurse?.id) {
+                  showToast("Eliminaste tu propia cuenta.");
+                  onLogout();
+                }
+              }}
+              showToast={showToast}
+            />
           </div>
         )}
         {activeView === "bp" && (

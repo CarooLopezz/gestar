@@ -27,6 +27,10 @@ export const api = {
   getPatients: () => request("/patients"),
   createPatient: (payload) =>
     request("/patients", { method: "POST", body: JSON.stringify(payload) }),
+  updatePatient: (id, payload) =>
+    request(`/patients/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  togglePatientEstado: (id) => request(`/patients/${id}/estado`, { method: "PATCH" }),
+  deletePatient: (id) => request(`/patients/${id}`, { method: "DELETE" }),
 
   getBPRecords: () => request("/bp"),
   createBPRecord: (payload) =>
@@ -50,6 +54,11 @@ export const api = {
     request("/nurse/login", { method: "POST", body: JSON.stringify(payload) }),
   logoutNurse: () => request("/nurse/logout", { method: "POST" }),
   getMe: () => request("/nurse/me"),
+  forgotNursePassword: (payload) =>
+    request("/nurse/forgot-password", { method: "POST", body: JSON.stringify(payload) }),
+  updateNurse: (id, payload) =>
+    request(`/nurses/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  deleteNurse: (id) => request(`/nurses/${id}`, { method: "DELETE" }),
 
   getWeights: () => request("/weights"),
   createWeightRecord: (payload) =>
