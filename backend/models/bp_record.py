@@ -11,6 +11,8 @@ class BPRecord(db.Model):
     sistolica = db.Column(db.Integer, nullable=False)
     diastolica = db.Column(db.Integer, nullable=False)
     alerta = db.Column(db.Boolean, nullable=False, default=False)
+    respuesta = db.Column(db.Text, nullable=True)
+    descartada = db.Column(db.Boolean, nullable=False, default=False)
 
     def to_dict(self):
         return {
@@ -22,4 +24,6 @@ class BPRecord(db.Model):
             "sistolica": self.sistolica,
             "diastolica": self.diastolica,
             "alerta": self.alerta,
+            "respuesta": self.respuesta,
+            "descartada": self.descartada,
         }

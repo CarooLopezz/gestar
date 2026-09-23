@@ -10,6 +10,8 @@ class SymptomRecord(db.Model):
     hora = db.Column(db.String(5), nullable=False)
     symptoms = db.Column(db.JSON, nullable=False)
     alerta = db.Column(db.Boolean, nullable=False, default=False)
+    respuesta = db.Column(db.Text, nullable=True)
+    descartada = db.Column(db.Boolean, nullable=False, default=False)
 
     def to_dict(self):
         return {
@@ -19,4 +21,6 @@ class SymptomRecord(db.Model):
             "hora": self.hora,
             "symptoms": self.symptoms,
             "alerta": self.alerta,
+            "respuesta": self.respuesta,
+            "descartada": self.descartada,
         }

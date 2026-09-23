@@ -103,6 +103,12 @@ export default function RecordWeight({ patient, showToast }) {
                   </span>
                 )}
               </div>
+              {r.respuesta && (
+                <div className="bg-pink-50 rounded-lg p-3 text-sm text-gray-700 mt-2">
+                  <p className="text-xs font-medium text-pink-600 mb-1">💬 Respuesta de tu enfermera:</p>
+                  {r.respuesta}
+                </div>
+              )}
             </div>
           ))}
           {records.length === 0 && (

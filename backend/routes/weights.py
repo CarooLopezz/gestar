@@ -75,12 +75,15 @@ def create_weight_record():
     return jsonify(record.to_dict()), 201
 
 
+TIPO_MODELOS = {"peso": WeightRecord, "presion": BPRecord, "sintoma": SymptomRecord}
+
+
 @weights_bp.route("/api/alerts", methods=["GET"])
 @nurse_required
 def get_alerts():
-    weight_alerts = WeightRecord.query.filter_by(alerta=True).all()
-    bp_alerts = BPRecord.query.filter_by(alerta=True).all()
-    symptom_alerts = SymptomRecord.query.filter_by(alerta=True).all()
+    weight_alerts = WeightRecord.query.filter_by(alerta=True, descartada=False).all()
+    bp_alerts = BPRecord.query.filter_by(alerta=True, descartada=False).all()
+    symptom_alerts = SymptomRecord.query.filter_by(alerta=True, descartada=False).all()
     patients_by_dni = {p.dni: p for p in Patient.query.all()}
 
     alerts = [
@@ -92,6 +95,7 @@ def get_alerts():
             "hora": r.hora,
             "detalle": f"{r.peso} kg",
             "motivo": "Aumento de más de 2kg respecto del registro anterior",
+            "respuesta": r.respuesta,
         }
         for r in weight_alerts
     ] + [
@@ -103,6 +107,7 @@ def get_alerts():
             "hora": r.hora,
             "detalle": f"{r.sistolica}/{r.diastolica} mmHg",
             "motivo": "Presión por encima de 120/80 (valor normal)",
+            "respuesta": r.respuesta,
         }
         for r in bp_alerts
     ] + [
@@ -118,6 +123,7 @@ def get_alerts():
             "hora": r.hora,
             "detalle": ", ".join(f"{s['nombre']} ({s['gravedad']})" for s in r.symptoms),
             "motivo": "Síntoma reportado como Severo",
+            "respuesta": r.respuesta,
         }
         for r in symptom_alerts
     ]
@@ -130,6 +136,42 @@ def get_alerts():
 
     alerts.sort(key=sort_key, reverse=True)
     return jsonify(alerts), 200
+
+
+@weights_bp.route("/api/alerts/<tipo>/<int:record_id>/responder", methods=["PATCH"])
+@nurse_required
+def responder_alerta(tipo, record_id):
+    modelo = TIPO_MODELOS.get(tipo)
+    if modelo is None:
+        return jsonify({"error": "Tipo de alerta inválido"}), 404
+
+    record = modelo.query.get(record_id)
+    if record is None:
+        return jsonify({"error": "Registro no encontrado"}), 404
+
+    mensaje = (request.get_json(force=True, silent=True) or {}).get("mensaje", "").strip()
+    if not mensaje:
+        return jsonify({"error": "Escribí una respuesta."}), 400
+
+    record.respuesta = mensaje
+    db.session.commit()
+    return jsonify(record.to_dict()), 200
+
+
+@weights_bp.route("/api/alerts/<tipo>/<int:record_id>/descartar", methods=["PATCH"])
+@nurse_required
+def descartar_alerta(tipo, record_id):
+    modelo = TIPO_MODELOS.get(tipo)
+    if modelo is None:
+        return jsonify({"error": "Tipo de alerta inválido"}), 404
+
+    record = modelo.query.get(record_id)
+    if record is None:
+        return jsonify({"error": "Registro no encontrado"}), 404
+
+    record.descartada = True
+    db.session.commit()
+    return jsonify(record.to_dict()), 200
 
 
 # -----------------------------------------------------------------------

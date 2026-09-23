@@ -219,7 +219,22 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
             showToast={showToast}
           />
         )}
-        {activeView === "alerts" && <AlertsPanel alerts={alerts} />}
+        {activeView === "alerts" && (
+          <AlertsPanel
+            alerts={alerts}
+            onAlertUpdated={(updated) =>
+              setAlerts((prev) =>
+                prev.map((a) => (a.tipo === updated.tipo && a.id === updated.id ? updated : a))
+              )
+            }
+            onAlertDismissed={(dismissed) =>
+              setAlerts((prev) =>
+                prev.filter((a) => !(a.tipo === dismissed.tipo && a.id === dismissed.id))
+              )
+            }
+            showToast={showToast}
+          />
+        )}
         </main>
       </div>
 

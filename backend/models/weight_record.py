@@ -10,6 +10,8 @@ class WeightRecord(db.Model):
     hora = db.Column(db.String(5), nullable=False)
     peso = db.Column(db.Float, nullable=False)
     alerta = db.Column(db.Boolean, nullable=False, default=False)
+    respuesta = db.Column(db.Text, nullable=True)
+    descartada = db.Column(db.Boolean, nullable=False, default=False)
 
     def to_dict(self):
         return {
@@ -20,4 +22,6 @@ class WeightRecord(db.Model):
             "hora": self.hora,
             "peso": self.peso,
             "alerta": self.alerta,
+            "respuesta": self.respuesta,
+            "descartada": self.descartada,
         }

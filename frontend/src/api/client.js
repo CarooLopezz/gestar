@@ -62,6 +62,12 @@ export const api = {
   createWeightRecord: (payload) =>
     request("/weights", { method: "POST", body: JSON.stringify(payload) }),
   getAlerts: () => request("/alerts"),
+  respondAlert: (tipo, id, mensaje) =>
+    request(`/alerts/${tipo}/${id}/responder`, {
+      method: "PATCH",
+      body: JSON.stringify({ mensaje }),
+    }),
+  dismissAlert: (tipo, id) => request(`/alerts/${tipo}/${id}/descartar`, { method: "PATCH" }),
 
   getOwnWeightRecords: (dni) => request(`/weights/patient/${encodeURIComponent(dni)}`),
   createOwnWeightRecord: (payload) =>
