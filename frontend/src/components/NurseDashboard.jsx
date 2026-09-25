@@ -6,6 +6,7 @@ import BloodPressureForm from "./BloodPressureForm";
 import WeightForm from "./WeightForm";
 import SymptomsFormNurse from "./SymptomsFormNurse";
 import AlertsPanel from "./AlertsPanel";
+import MessagesPanel from "./MessagesPanel";
 import NurseListTable from "./NurseListTable";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
 
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
   { id: "bp", label: "Registrar presión arterial", icon: "🩺" },
   { id: "weight", label: "Registrar peso", icon: "⚖️" },
   { id: "symptoms", label: "Registrar síntomas", icon: "🤒" },
+  { id: "messages", label: "Mensajes", icon: "💬" },
   { id: "alerts", label: "Alertas", icon: "🚨" },
 ];
 
@@ -24,6 +26,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
   const [bpRecords, setBpRecords] = useState([]);
   const [weightRecords, setWeightRecords] = useState([]);
   const [symptomRecords, setSymptomRecords] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [nurses, setNurses] = useState([]);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -58,6 +61,10 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
     setSymptomRecords(await api.getAllSymptoms());
   });
 
+  const loadMessages = withSessionGuard(async () => {
+    setMessages(await api.getAllMessages());
+  });
+
   const loadAlerts = withSessionGuard(async () => {
     setAlerts(await api.getAlerts());
   });
@@ -87,6 +94,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
       loadPatients();
       loadSymptomRecords();
     }
+    if (activeView === "messages") loadMessages();
     if (activeView === "alerts") loadAlerts();
   }, [activeView]);
 
@@ -216,6 +224,15 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
             patients={patients}
             symptomRecords={symptomRecords}
             onRecordCreated={(r) => setSymptomRecords((prev) => [r, ...prev])}
+            showToast={showToast}
+          />
+        )}
+        {activeView === "messages" && (
+          <MessagesPanel
+            messages={messages}
+            onMessageUpdated={(updated) =>
+              setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)))
+            }
             showToast={showToast}
           />
         )}

@@ -3,6 +3,7 @@ import PatientLoginForm from "./PatientLoginForm";
 import SymptomsForm from "./SymptomsForm";
 import RecordBloodPressure from "./RecordBloodPressure";
 import RecordWeight from "./RecordWeight";
+import PatientMessageForm from "./PatientMessageForm";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
 
 export default function PatientPortal({ onBack, showToast }) {
@@ -30,6 +31,7 @@ export default function PatientPortal({ onBack, showToast }) {
       <SymptomsForm patient={currentPatient} showToast={showToast} />
       <RecordBloodPressure patient={currentPatient} showToast={showToast} />
       <RecordWeight patient={currentPatient} showToast={showToast} />
+      <PatientMessageForm patient={currentPatient} showToast={showToast} />
 
       <ConfirmLogoutModal
         open={showLogoutConfirm}

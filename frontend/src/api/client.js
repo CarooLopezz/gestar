@@ -76,4 +76,14 @@ export const api = {
   getNurses: () => request("/nurses"),
   createNurse: (payload) =>
     request("/nurses", { method: "POST", body: JSON.stringify(payload) }),
+
+  getOwnMessages: (dni) => request(`/messages/patient/${encodeURIComponent(dni)}`),
+  createOwnMessage: (payload) =>
+    request("/messages/patient", { method: "POST", body: JSON.stringify(payload) }),
+  getAllMessages: () => request("/messages"),
+  replyMessage: (id, respuesta) =>
+    request(`/messages/${id}/responder`, {
+      method: "PATCH",
+      body: JSON.stringify({ respuesta }),
+    }),
 };
