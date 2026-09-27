@@ -1,10 +1,15 @@
+import re
+from datetime import datetime
+
 from flask import Blueprint, jsonify, request
 
 from auth import nurse_required
 from extensions import db
-from models import Patient, SymptomRecord
+from models import BPRecord, Patient, SymptomRecord
 
 patients_bp = Blueprint("patients", __name__)
+
+HORA_REGEX = re.compile(r"^\d{2}:\d{2}$")
 
 
 def validate_patient_payload(data, patient_id=None):
@@ -106,3 +111,39 @@ def delete_patient(patient_id):
     db.session.delete(patient)
     db.session.commit()
     return jsonify({"status": "ok"}), 200
+
+
+# -----------------------------------------------------------------------
+# Recordatorio diario de presión (autoservicio de la paciente, sin sesión
+# de enfermero — igual que /api/bp/patient, /api/messages/patient, etc.)
+# -----------------------------------------------------------------------
+@patients_bp.route("/api/patients/patient/<dni>/recordatorio", methods=["GET"])
+def get_recordatorio(dni):
+    patient = Patient.query.filter_by(dni=dni).first()
+    if patient is None:
+        return jsonify({"error": "Paciente no encontrado"}), 404
+
+    hoy = datetime.now().strftime("%d/%m/%Y")
+    ya_registro_hoy = (
+        BPRecord.query.filter_by(patient_id=patient.id, fecha=hoy).first() is not None
+    )
+    return jsonify(
+        {"hora_recordatorio": patient.hora_recordatorio, "ya_registro_hoy": ya_registro_hoy}
+    ), 200
+
+
+@patients_bp.route("/api/patients/patient/<dni>/recordatorio", methods=["PATCH"])
+def set_recordatorio(dni):
+    patient = Patient.query.filter_by(dni=dni).first()
+    if patient is None:
+        return jsonify({"error": "Paciente no encontrado"}), 404
+
+    data = request.get_json(force=True, silent=True) or {}
+    hora = (data.get("hora_recordatorio") or "").strip()
+
+    if hora and not HORA_REGEX.match(hora):
+        return jsonify({"error": "Formato de hora inválido"}), 400
+
+    patient.hora_recordatorio = hora or None
+    db.session.commit()
+    return jsonify(patient.to_dict()), 200

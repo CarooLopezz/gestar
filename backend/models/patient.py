@@ -10,6 +10,7 @@ class Patient(db.Model):
     dni = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     estado = db.Column(db.String(20), nullable=False, default="Activo")
+    hora_recordatorio = db.Column(db.String(5), nullable=True)
 
     bp_records = db.relationship("BPRecord", backref="patient", cascade="all, delete-orphan")
     weight_records = db.relationship("WeightRecord", backref="patient", cascade="all, delete-orphan")
@@ -23,4 +24,5 @@ class Patient(db.Model):
             "dni": self.dni,
             "email": self.email,
             "estado": self.estado,
+            "hora_recordatorio": self.hora_recordatorio,
         }

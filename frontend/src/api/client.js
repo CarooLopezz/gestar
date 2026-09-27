@@ -86,4 +86,11 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ respuesta }),
     }),
+
+  getRecordatorio: (dni) => request(`/patients/patient/${encodeURIComponent(dni)}/recordatorio`),
+  setRecordatorio: (dni, hora_recordatorio) =>
+    request(`/patients/patient/${encodeURIComponent(dni)}/recordatorio`, {
+      method: "PATCH",
+      body: JSON.stringify({ hora_recordatorio }),
+    }),
 };
