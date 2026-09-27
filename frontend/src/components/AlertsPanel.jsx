@@ -85,9 +85,18 @@ export default function AlertsPanel({ alerts, onAlertUpdated, onAlertDismissed, 
                 </span>
               </div>
               <p className="text-sm text-gray-700 mb-2">{a.detalle}</p>
-              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-red-600 text-white mb-3">
-                ⚠ {a.motivo}
-              </span>
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-red-600 text-white">
+                  ⚠ {a.motivo}
+                </span>
+                <span
+                  className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                    a.respuesta ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+                  {a.respuesta ? "✓ Respondida" : "⏳ Pendiente"}
+                </span>
+              </div>
 
               {a.respuesta ? (
                 <div className="bg-white/70 rounded-lg p-3 text-sm text-gray-700 mb-2">
@@ -117,9 +126,9 @@ export default function AlertsPanel({ alerts, onAlertUpdated, onAlertDismissed, 
                 <button
                   onClick={() => handleDescartar(a)}
                   disabled={isBusy}
-                  className="text-xs font-medium text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline disabled:opacity-50"
                 >
-                  Descartar alerta
+                  🗑️ Descartar alerta
                 </button>
               </div>
             </div>
