@@ -9,8 +9,10 @@ import AlertsPanel from "./AlertsPanel";
 import MessagesPanel from "./MessagesPanel";
 import NurseListTable from "./NurseListTable";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
+import PregnancyTrimesterCalculator from "./PregnancyTrimesterCalculator";
 
 const NAV_ITEMS = [
+  { id: "trimester", label: "Calcular trimestre", icon: "🤰" },
   { id: "register", label: "Registrar", icon: "➕" },
   { id: "list", label: "Lista de usuarios", icon: "📋" },
   { id: "bp", label: "Registrar presión arterial", icon: "🩺" },
@@ -166,6 +168,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
         </header>
 
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        {activeView === "trimester" && <PregnancyTrimesterCalculator />}
         {activeView === "register" && (
           <RegisterUserForm
             onPatientCreated={(p) => setPatients((prev) => [...prev, p])}

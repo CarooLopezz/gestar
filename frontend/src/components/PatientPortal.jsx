@@ -6,8 +6,10 @@ import RecordBloodPressure from "./RecordBloodPressure";
 import RecordWeight from "./RecordWeight";
 import PatientMessageForm from "./PatientMessageForm";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
+import PregnancyTrimesterCalculator from "./PregnancyTrimesterCalculator";
 
 const NAV_ITEMS = [
+  { id: "trimester", label: "Trimestre de embarazo", icon: "🤰" },
   { id: "symptoms", label: "Síntomas", icon: "🤒" },
   { id: "bp", label: "Presión arterial", icon: "🩺" },
   { id: "weight", label: "Peso", icon: "⚖️" },
@@ -145,6 +147,7 @@ export default function PatientPortal({ onBack, showToast }) {
             </button>
           )}
 
+          {activeView === "trimester" && <PregnancyTrimesterCalculator />}
           {activeView === "symptoms" && (
             <SymptomsForm patient={currentPatient} showToast={showToast} />
           )}
