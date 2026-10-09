@@ -2,16 +2,20 @@ import { useMemo, useState } from "react";
 import { api } from "../api/client";
 
 // Paleta cíclica para diferenciar visualmente a qué paciente pertenece cada
-// alerta (no indica gravedad, solo agrupa filas de la misma persona).
+// alerta (no indica gravedad, solo agrupa filas de la misma persona). Empieza
+// lejos del rojo a propósito: el badge de "Severo"/"Fuera de rango" ya usa
+// rojo para indicar gravedad, así que el color de la paciente no debería
+// confundirse con eso. Rojo/naranja/ámbar quedan al final del ciclo.
 const COLORS = [
-  { row: "bg-red-100", border: "border-red-500", dot: "bg-red-500" },
-  { row: "bg-orange-100", border: "border-orange-500", dot: "bg-orange-500" },
-  { row: "bg-amber-100", border: "border-amber-500", dot: "bg-amber-500" },
-  { row: "bg-lime-100", border: "border-lime-600", dot: "bg-lime-600" },
-  { row: "bg-teal-100", border: "border-teal-500", dot: "bg-teal-500" },
   { row: "bg-blue-100", border: "border-blue-500", dot: "bg-blue-500" },
   { row: "bg-purple-100", border: "border-purple-500", dot: "bg-purple-500" },
+  { row: "bg-teal-100", border: "border-teal-500", dot: "bg-teal-500" },
   { row: "bg-pink-100", border: "border-pink-500", dot: "bg-pink-500" },
+  { row: "bg-indigo-100", border: "border-indigo-500", dot: "bg-indigo-500" },
+  { row: "bg-lime-100", border: "border-lime-600", dot: "bg-lime-600" },
+  { row: "bg-amber-100", border: "border-amber-500", dot: "bg-amber-500" },
+  { row: "bg-orange-100", border: "border-orange-500", dot: "bg-orange-500" },
+  { row: "bg-red-100", border: "border-red-500", dot: "bg-red-500" },
 ];
 
 export default function AlertsPanel({ alerts, onAlertUpdated, onAlertDismissed, showToast }) {
