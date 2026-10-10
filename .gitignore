@@ -13,6 +13,9 @@ frontend/dist/
 .env
 .env.local
 
+# Backup de la base de datos (datos reales de pacientes, no versionar)
+backend_restore/
+
 # OS
 .DS_Store
 Thumbs.db
