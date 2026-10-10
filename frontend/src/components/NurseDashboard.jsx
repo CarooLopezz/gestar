@@ -7,6 +7,7 @@ import WeightForm from "./WeightForm";
 import SymptomsFormNurse from "./SymptomsFormNurse";
 import AlertsPanel from "./AlertsPanel";
 import MessagesPanel from "./MessagesPanel";
+import MonitoringPanel from "./MonitoringPanel";
 import NurseListTable from "./NurseListTable";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
 import PregnancyTrimesterCalculator from "./PregnancyTrimesterCalculator";
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { id: "symptoms", label: "Registrar síntomas", icon: "🤒" },
   { id: "messages", label: "Mensajes", icon: "💬" },
   { id: "alerts", label: "Alertas", icon: "🚨" },
+  { id: "monitoring", label: "Monitoreo", icon: "📡" },
 ];
 
 export default function NurseDashboard({ nurse, onLogout, showToast }) {
@@ -30,6 +32,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
   const [symptomRecords, setSymptomRecords] = useState([]);
   const [messages, setMessages] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [monitoring, setMonitoring] = useState([]);
   const [nurses, setNurses] = useState([]);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -71,6 +74,10 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
     setAlerts(await api.getAlerts());
   });
 
+  const loadMonitoring = withSessionGuard(async () => {
+    setMonitoring(await api.getMonitoringNotifications());
+  });
+
   const loadNurses = withSessionGuard(async () => {
     setNurses(await api.getNurses());
   });
@@ -98,6 +105,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
     }
     if (activeView === "messages") loadMessages();
     if (activeView === "alerts") loadAlerts();
+    if (activeView === "monitoring") loadMonitoring();
   }, [activeView]);
 
   const handleNavClick = (id) => {
@@ -255,6 +263,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
             showToast={showToast}
           />
         )}
+        {activeView === "monitoring" && <MonitoringPanel notifications={monitoring} />}
         </main>
       </div>
 

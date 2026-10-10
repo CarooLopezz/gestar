@@ -22,6 +22,7 @@ export default function PatientPortal({ onBack, showToast }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [recordatorio, setRecordatorio] = useState({ hora_recordatorio: "", ya_registro_hoy: true });
+  const [monitoreo, setMonitoreo] = useState({ necesita_control: false, dias_sin_control: null });
 
   const loadRecordatorio = async (dni) => {
     try {
@@ -35,8 +36,19 @@ export default function PatientPortal({ onBack, showToast }) {
     }
   };
 
+  const loadMonitoreo = async (dni) => {
+    try {
+      setMonitoreo(await api.getOwnMonitoringStatus(dni));
+    } catch {
+      // no es crítico si falla, simplemente no se muestra el aviso
+    }
+  };
+
   useEffect(() => {
-    if (currentPatient) loadRecordatorio(currentPatient.dni);
+    if (currentPatient) {
+      loadRecordatorio(currentPatient.dni);
+      loadMonitoreo(currentPatient.dni);
+    }
   }, [currentPatient, activeView]);
 
   if (!currentPatient) {
@@ -134,6 +146,17 @@ export default function PatientPortal({ onBack, showToast }) {
         </header>
 
         <main className="flex-1 p-4 md:p-8 overflow-y-auto flex flex-col items-center">
+          {monitoreo.necesita_control && (
+            <div className="w-full max-w-lg mb-4 bg-red-50 border border-red-200 text-red-800 text-sm rounded-xl px-4 py-3 flex items-center gap-2">
+              <span className="text-lg">🩺</span>
+              <span>
+                {monitoreo.dias_sin_control === null
+                  ? "Todavía no cargaste ningún control (presión, peso o síntomas). Te recomendamos empezar hoy."
+                  : `No te controlaste hace ${monitoreo.dias_sin_control} días. Te recomendamos cargar tus datos.`}
+              </span>
+            </div>
+          )}
+
           {mostrarAviso && (
             <button
               onClick={() => handleNavClick("bp")}

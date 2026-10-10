@@ -93,4 +93,7 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ hora_recordatorio }),
     }),
+
+  getMonitoringNotifications: () => request("/monitoring"),
+  getOwnMonitoringStatus: (dni) => request(`/monitoring/patient/${encodeURIComponent(dni)}`),
 };
