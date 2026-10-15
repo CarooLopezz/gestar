@@ -4,5 +4,6 @@ from .symptom_record import SymptomRecord
 from .nurse import Nurse
 from .weight_record import WeightRecord
 from .message import Message
+from .appointment import Appointment
 
-__all__ = ["Patient", "BPRecord", "SymptomRecord", "Nurse", "WeightRecord", "Message"]
+__all__ = ["Patient", "BPRecord", "SymptomRecord", "Nurse", "WeightRecord", "Message", "Appointment"]

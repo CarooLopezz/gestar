@@ -11,6 +11,7 @@ import MonitoringPanel from "./MonitoringPanel";
 import NurseListTable from "./NurseListTable";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
 import PregnancyTrimesterCalculator from "./PregnancyTrimesterCalculator";
+import Agenda from "./Agenda";
 
 const NAV_ITEMS = [
   { id: "trimester", label: "Calcular trimestre", icon: "🤰" },
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { id: "messages", label: "Mensajes", icon: "💬" },
   { id: "alerts", label: "Alertas", icon: "🚨" },
   { id: "monitoring", label: "Monitoreo", icon: "📡" },
+  { id: "agenda", label: "Agenda", icon: "📅" },
 ];
 
 export default function NurseDashboard({ nurse, onLogout, showToast }) {
@@ -33,6 +35,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
   const [messages, setMessages] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [monitoring, setMonitoring] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [nurses, setNurses] = useState([]);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -78,6 +81,10 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
     setMonitoring(await api.getMonitoringNotifications());
   });
 
+  const loadAppointments = withSessionGuard(async () => {
+    setAppointments(await api.getAppointments());
+  });
+
   const loadNurses = withSessionGuard(async () => {
     setNurses(await api.getNurses());
   });
@@ -106,6 +113,10 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
     if (activeView === "messages") loadMessages();
     if (activeView === "alerts") loadAlerts();
     if (activeView === "monitoring") loadMonitoring();
+    if (activeView === "agenda") {
+      loadPatients();
+      loadAppointments();
+    }
   }, [activeView]);
 
   const handleNavClick = (id) => {
@@ -264,6 +275,22 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
           />
         )}
         {activeView === "monitoring" && <MonitoringPanel notifications={monitoring} />}
+        {activeView === "agenda" && (
+          <Agenda
+            patients={patients}
+            appointments={appointments}
+            onAppointmentCreated={(a) =>
+              setAppointments((prev) =>
+                [...prev, a].sort((x, y) => (x.fecha + x.hora).localeCompare(y.fecha + y.hora))
+              )
+            }
+            onAppointmentUpdated={(updated) =>
+              setAppointments((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
+            }
+            onAppointmentDeleted={(id) => setAppointments((prev) => prev.filter((a) => a.id !== id))}
+            showToast={showToast}
+          />
+        )}
         </main>
       </div>
 

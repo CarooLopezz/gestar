@@ -96,4 +96,10 @@ export const api = {
 
   getMonitoringNotifications: () => request("/monitoring"),
   getOwnMonitoringStatus: (dni) => request(`/monitoring/patient/${encodeURIComponent(dni)}`),
+
+  getAppointments: () => request("/appointments"),
+  createAppointment: (payload) =>
+    request("/appointments", { method: "POST", body: JSON.stringify(payload) }),
+  completeAppointment: (id) => request(`/appointments/${id}/realizado`, { method: "PATCH" }),
+  deleteAppointment: (id) => request(`/appointments/${id}`, { method: "DELETE" }),
 };
