@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
+import { formatFecha } from "../utils/fecha";
 
 const GRAVEDAD_COLOR = {
   Leve: "bg-green-600 text-white",
@@ -51,6 +52,9 @@ export default function PatientDetailModal({ patient, onClose, showToast }) {
             </h2>
             <p className="text-sm text-gray-500 mt-1">
               DNI {patient.dni} · {patient.email}
+            </p>
+            <p className="text-sm text-gray-500">
+              Fecha probable de parto: {formatFecha(patient.fecha_parto) || "No registrada"}
             </p>
             <span
               className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium ${

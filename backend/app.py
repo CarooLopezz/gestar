@@ -47,8 +47,26 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
 register_routes(app)
 
+def add_missing_columns():
+    """create_all() crea tablas nuevas pero no agrega columnas a las que ya
+    existen (ej. la base de Render). Las columnas nuevas de tablas viejas se
+    agregan acá; tienen que ser nullable para no romper las filas existentes.
+    """
+    nuevas = {
+        "patients": {"fecha_parto": "DATE"},
+    }
+    inspector = db.inspect(db.engine)
+    with db.engine.begin() as conn:
+        for tabla, columnas in nuevas.items():
+            existentes = {c["name"] for c in inspector.get_columns(tabla)}
+            for nombre, tipo in columnas.items():
+                if nombre not in existentes:
+                    conn.execute(db.text(f"ALTER TABLE {tabla} ADD COLUMN {nombre} {tipo}"))
+
+
 with app.app_context():
     db.create_all()
+    add_missing_columns()
 
 if __name__ == "__main__":
     app.run(debug=not IS_PRODUCTION, port=int(os.environ.get("PORT", 5000)))

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { api } from "../api/client";
 import PatientDetailModal from "./PatientDetailModal";
+import { formatFecha } from "../utils/fecha";
 
 function ActionIcons({ patient, isBusy, confirming, onDetail, onEdit, onAskDelete, onConfirmDelete, onCancelDelete }) {
   if (confirming) {
@@ -71,7 +72,13 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
 
   const startEdit = (p) => {
     setEditingId(p.id);
-    setEditForm({ nombre: p.nombre, apellido: p.apellido, dni: p.dni, email: p.email });
+    setEditForm({
+      nombre: p.nombre,
+      apellido: p.apellido,
+      dni: p.dni,
+      email: p.email,
+      fecha_parto: p.fecha_parto || "",
+    });
     setEditErrors({});
   };
 
@@ -162,6 +169,16 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
         />
         {editErrors.email && <p className="text-red-500 text-xs mt-1">{editErrors.email}</p>}
       </div>
+      <div>
+        {stacked && <label className="text-xs text-gray-400">Fecha probable de parto</label>}
+        <input
+          type="date"
+          value={editForm.fecha_parto}
+          onChange={(e) => setEditForm((f) => ({ ...f, fecha_parto: e.target.value }))}
+          className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+        />
+        {editErrors.fecha_parto && <p className="text-red-500 text-xs mt-1">{editErrors.fecha_parto}</p>}
+      </div>
     </div>
   );
 
@@ -179,13 +196,14 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
       {/* Desktop: tabla */}
       <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm text-left">
+          <table className="w-full min-w-[860px] text-sm text-left">
             <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <th className="px-4 py-3 font-medium">Nombre</th>
                 <th className="px-4 py-3 font-medium">Apellido</th>
                 <th className="px-4 py-3 font-medium">DNI</th>
                 <th className="px-4 py-3 font-medium">Email</th>
+                <th className="px-4 py-3 font-medium">Fecha de parto</th>
                 <th className="px-4 py-3 font-medium">Estado</th>
                 <th className="px-4 py-3 font-medium">Acciones</th>
               </tr>
@@ -198,8 +216,8 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
                   <tr key={p.id}>
                     {isEditing ? (
                       <>
-                        <td className="px-4 py-2" colSpan={4}>
-                          <div className="grid grid-cols-4 gap-2">
+                        <td className="px-4 py-2" colSpan={5}>
+                          <div className="grid grid-cols-5 gap-2">
                             <EditFields />
                           </div>
                         </td>
@@ -225,6 +243,9 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
                         <td className="px-4 py-3">{p.apellido}</td>
                         <td className="px-4 py-3">{p.dni}</td>
                         <td className="px-4 py-3">{p.email}</td>
+                        <td className="px-4 py-3">
+                          {formatFecha(p.fecha_parto) || <span className="text-gray-400">No registrada</span>}
+                        </td>
                         <td className="px-4 py-3">
                           <button
                             onClick={() => toggleEstado(p)}
@@ -297,6 +318,9 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5">DNI {p.dni}</p>
                       <p className="text-xs text-gray-400">{p.email}</p>
+                      <p className="text-xs text-gray-400">
+                        Parto: {formatFecha(p.fecha_parto) || "No registrada"}
+                      </p>
                     </div>
                     <button
                       onClick={() => toggleEstado(p)}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { api } from "../api/client";
 
-const emptyForm = { nombre: "", apellido: "", dni: "", email: "" };
+const emptyForm = { nombre: "", apellido: "", dni: "", email: "", fecha_parto: "" };
 
 export default function RegisterUserForm({ onPatientCreated, onNurseCreated, showToast }) {
   const [role, setRole] = useState("embarazada");
@@ -30,6 +30,7 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
           apellido: form.apellido,
           dni: form.dni,
           email: form.email,
+          fecha_parto: form.fecha_parto,
         });
         onPatientCreated(patient);
         showToast("Embarazada registrada correctamente");
@@ -109,6 +110,17 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
             <option value="enfermero">Enfermero/a</option>
           </select>
         </div>
+
+        {role === "embarazada" && (
+          <Field label="Fecha probable de parto (opcional)" error={errors.fecha_parto}>
+            <input
+              type="date"
+              value={form.fecha_parto}
+              onChange={handleChange("fecha_parto")}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            />
+          </Field>
+        )}
 
         {role === "embarazada" && (
           <div>

@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from flask import Blueprint, jsonify, request
 
@@ -11,14 +11,50 @@ patients_bp = Blueprint("patients", __name__)
 
 HORA_REGEX = re.compile(r"^\d{2}:\d{2}$")
 
+# Un embarazo dura como mucho ~42 semanas, así que la fecha probable de parto
+# no puede estar más lejos que eso. Hacia atrás dejamos 2 semanas de margen
+# por los embarazos que pasan de término.
+FECHA_PARTO_MAX_FUTURO = timedelta(weeks=42)
+FECHA_PARTO_MAX_PASADO = timedelta(weeks=2)
 
-def validate_patient_payload(data, patient_id=None):
+
+def parse_fecha_parto(raw, current=None):
+    """Devuelve (fecha, error). Vacío = sin fecha registrada (es opcional).
+
+    Si la fecha no cambió respecto de la guardada (`current`) no se vuelve a
+    validar el rango: si no, una paciente cuya fecha ya pasó no se podría
+    editar más.
+    """
+    raw = (raw or "").strip()
+    if not raw:
+        return None, None
+    try:
+        fecha = datetime.strptime(raw, "%Y-%m-%d").date()
+    except ValueError:
+        return None, "Fecha inválida"
+
+    if fecha == current:
+        return fecha, None
+
+    hoy = date.today()
+    if fecha < hoy - FECHA_PARTO_MAX_PASADO:
+        return None, "La fecha de parto no puede estar en el pasado"
+    if fecha > hoy + FECHA_PARTO_MAX_FUTURO:
+        return None, "La fecha de parto no puede ser a más de 42 semanas"
+    return fecha, None
+
+
+def validate_patient_payload(data, patient_id=None, current_fecha_parto=None):
     nombre = (data.get("nombre") or "").strip()
     apellido = (data.get("apellido") or "").strip()
     dni = (data.get("dni") or "").strip()
     email = (data.get("email") or "").strip()
 
     errors = {}
+
+    fecha_parto, fecha_error = parse_fecha_parto(data.get("fecha_parto"), current_fecha_parto)
+    if fecha_error:
+        errors["fecha_parto"] = fecha_error
     if not nombre:
         errors["nombre"] = "Campo obligatorio"
     if not apellido:
@@ -36,7 +72,7 @@ def validate_patient_payload(data, patient_id=None):
     elif "@" not in email or "." not in email.split("@")[-1]:
         errors["email"] = "Formato de email inválido"
 
-    return nombre, apellido, dni, email, errors
+    return nombre, apellido, dni, email, fecha_parto, errors
 
 
 @patients_bp.route("/api/patients", methods=["GET"])
@@ -50,12 +86,19 @@ def get_patients():
 @nurse_required
 def create_patient():
     data = request.get_json(force=True, silent=True) or {}
-    nombre, apellido, dni, email, errors = validate_patient_payload(data)
+    nombre, apellido, dni, email, fecha_parto, errors = validate_patient_payload(data)
 
     if errors:
         return jsonify({"errors": errors}), 400
 
-    patient = Patient(nombre=nombre, apellido=apellido, dni=dni, email=email, estado="Activo")
+    patient = Patient(
+        nombre=nombre,
+        apellido=apellido,
+        dni=dni,
+        email=email,
+        fecha_parto=fecha_parto,
+        estado="Activo",
+    )
     db.session.add(patient)
     db.session.commit()
     return jsonify(patient.to_dict()), 201
@@ -69,7 +112,9 @@ def update_patient(patient_id):
         return jsonify({"error": "Paciente no encontrada"}), 404
 
     data = request.get_json(force=True, silent=True) or {}
-    nombre, apellido, dni, email, errors = validate_patient_payload(data, patient_id=patient_id)
+    nombre, apellido, dni, email, fecha_parto, errors = validate_patient_payload(
+        data, patient_id=patient_id, current_fecha_parto=patient.fecha_parto
+    )
 
     if errors:
         return jsonify({"errors": errors}), 400
@@ -79,6 +124,7 @@ def update_patient(patient_id):
     patient.apellido = apellido
     patient.dni = dni
     patient.email = email
+    patient.fecha_parto = fecha_parto
     db.session.commit()
 
     if old_dni != dni:
