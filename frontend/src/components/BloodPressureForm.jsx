@@ -60,7 +60,7 @@ export default function BloodPressureForm({ patients, bpRecords, onRecordCreated
 
   return (
     <div className="fade-in max-w-3xl">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Registrar presión arterial</h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Presión arterial</h2>
 
       <form
         onSubmit={handleSubmit}

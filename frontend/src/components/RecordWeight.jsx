@@ -53,7 +53,7 @@ export default function RecordWeight({ patient, showToast }) {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full max-w-lg mb-8">
-        <h2 className="font-medium text-gray-700 mb-4">Registrar mi peso</h2>
+        <h2 className="font-medium text-gray-700 mb-4">Peso</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">Peso (kg)</label>

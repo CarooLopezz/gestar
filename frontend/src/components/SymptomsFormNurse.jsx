@@ -98,7 +98,7 @@ export default function SymptomsFormNurse({ patients, symptomRecords, onRecordCr
 
   return (
     <div className="fade-in max-w-3xl">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Registrar síntomas</h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Síntomas</h2>
 
       <form
         onSubmit={handleSubmit}

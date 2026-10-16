@@ -65,7 +65,7 @@ export default function WeightForm({ patients, weightRecords, onRecordCreated, s
 
   return (
     <div className="fade-in max-w-3xl">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Registrar peso</h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Peso</h2>
 
       <form
         onSubmit={handleSubmit}

@@ -53,7 +53,7 @@ export default function RecordBloodPressure({ patient, showToast }) {
   return (
     <>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 w-full max-w-lg mb-8">
-        <h2 className="font-medium text-gray-700 mb-4">Registrar mi presión arterial</h2>
+        <h2 className="font-medium text-gray-700 mb-4">Presión arterial</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
