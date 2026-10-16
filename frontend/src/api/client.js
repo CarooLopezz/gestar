@@ -102,4 +102,15 @@ export const api = {
     request("/appointments", { method: "POST", body: JSON.stringify(payload) }),
   completeAppointment: (id) => request(`/appointments/${id}/realizado`, { method: "PATCH" }),
   deleteAppointment: (id) => request(`/appointments/${id}`, { method: "DELETE" }),
+
+  getAgenda: (dni) => request(`/agenda/patient/${encodeURIComponent(dni)}`),
+  setOwnFechaParto: (dni, fecha_parto) =>
+    request(`/agenda/patient/${encodeURIComponent(dni)}/fecha-parto`, {
+      method: "PATCH",
+      body: JSON.stringify({ fecha_parto }),
+    }),
+  marcarEstudio: (dni, key) =>
+    request(`/agenda/patient/${encodeURIComponent(dni)}/estudios/${key}`, { method: "POST" }),
+  desmarcarEstudio: (dni, key) =>
+    request(`/agenda/patient/${encodeURIComponent(dni)}/estudios/${key}`, { method: "DELETE" }),
 };

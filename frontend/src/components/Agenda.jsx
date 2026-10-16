@@ -161,7 +161,7 @@ export default function Agenda({ patients, appointments, onAppointmentCreated, o
   return (
     <div className="fade-in max-w-3xl">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">Agenda</h2>
+        <h2 className="text-xl font-semibold text-gray-800">Turnos</h2>
         <p className="text-sm text-gray-500 mt-1">Próximos controles y consultas de las embarazadas.</p>
       </div>
 

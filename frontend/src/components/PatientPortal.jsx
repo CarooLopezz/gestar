@@ -6,10 +6,10 @@ import RecordBloodPressure from "./RecordBloodPressure";
 import RecordWeight from "./RecordWeight";
 import PatientMessageForm from "./PatientMessageForm";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
-import PregnancyTrimesterCalculator from "./PregnancyTrimesterCalculator";
+import PatientAgenda from "./PatientAgenda";
 
 const NAV_ITEMS = [
-  { id: "trimester", label: "Trimestre de embarazo", icon: "🤰" },
+  { id: "agenda", label: "Agenda", icon: "📅" },
   { id: "symptoms", label: "Síntomas", icon: "🤒" },
   { id: "bp", label: "Presión arterial", icon: "🩺" },
   { id: "weight", label: "Peso", icon: "⚖️" },
@@ -18,7 +18,7 @@ const NAV_ITEMS = [
 
 export default function PatientPortal({ onBack, showToast }) {
   const [currentPatient, setCurrentPatient] = useState(null);
-  const [activeView, setActiveView] = useState("symptoms");
+  const [activeView, setActiveView] = useState("agenda");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [recordatorio, setRecordatorio] = useState({ hora_recordatorio: "", ya_registro_hoy: true });
@@ -170,7 +170,7 @@ export default function PatientPortal({ onBack, showToast }) {
             </button>
           )}
 
-          {activeView === "trimester" && <PregnancyTrimesterCalculator />}
+          {activeView === "agenda" && <PatientAgenda patient={currentPatient} showToast={showToast} />}
           {activeView === "symptoms" && (
             <SymptomsForm patient={currentPatient} showToast={showToast} />
           )}

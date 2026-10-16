@@ -17,6 +17,7 @@ class Patient(db.Model):
     weight_records = db.relationship("WeightRecord", backref="patient", cascade="all, delete-orphan")
     messages = db.relationship("Message", backref="patient", cascade="all, delete-orphan")
     appointments = db.relationship("Appointment", backref="patient", cascade="all, delete-orphan")
+    exam_records = db.relationship("ExamRecord", backref="patient", cascade="all, delete-orphan")
 
     def to_dict(self):
         return {

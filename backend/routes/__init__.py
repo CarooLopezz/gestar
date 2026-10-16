@@ -8,6 +8,7 @@ from .weights import weights_bp
 from .messages import messages_bp
 from .monitoring import monitoring_bp
 from .appointments import appointments_bp
+from .pregnancy import pregnancy_bp
 
 
 def register_routes(app):
@@ -21,3 +22,4 @@ def register_routes(app):
     app.register_blueprint(messages_bp)
     app.register_blueprint(monitoring_bp)
     app.register_blueprint(appointments_bp)
+    app.register_blueprint(pregnancy_bp)

@@ -10,20 +10,18 @@ import MessagesPanel from "./MessagesPanel";
 import MonitoringPanel from "./MonitoringPanel";
 import NurseListTable from "./NurseListTable";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
-import PregnancyTrimesterCalculator from "./PregnancyTrimesterCalculator";
 import Agenda from "./Agenda";
 
 const NAV_ITEMS = [
-  { id: "trimester", label: "Calcular trimestre", icon: "🤰" },
   { id: "register", label: "Registrar", icon: "➕" },
   { id: "list", label: "Lista de usuarios", icon: "📋" },
-  { id: "bp", label: "Registrar presión arterial", icon: "🩺" },
-  { id: "weight", label: "Registrar peso", icon: "⚖️" },
-  { id: "symptoms", label: "Registrar síntomas", icon: "🤒" },
+  { id: "bp", label: "Presión arterial", icon: "🩺" },
+  { id: "weight", label: "Peso", icon: "⚖️" },
+  { id: "symptoms", label: "Síntomas", icon: "🤒" },
   { id: "messages", label: "Mensajes", icon: "💬" },
   { id: "alerts", label: "Alertas", icon: "🚨" },
   { id: "monitoring", label: "Monitoreo", icon: "📡" },
-  { id: "agenda", label: "Agenda", icon: "📅" },
+  { id: "agenda", label: "Turnos", icon: "📅" },
 ];
 
 export default function NurseDashboard({ nurse, onLogout, showToast }) {
@@ -187,7 +185,6 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
         </header>
 
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        {activeView === "trimester" && <PregnancyTrimesterCalculator />}
         {activeView === "register" && (
           <RegisterUserForm
             onPatientCreated={(p) => setPatients((prev) => [...prev, p])}

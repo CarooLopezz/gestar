@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify
 
 from auth import nurse_required
 from models import BPRecord, Patient, SymptomRecord, WeightRecord
+from pregnancy import estado_estudios, info_embarazo
 
 monitoring_bp = Blueprint("monitoring", __name__)
 
@@ -49,29 +50,41 @@ def estado_monitoreo(patient):
 
 
 # -----------------------------------------------------------------------
-# Vista de la enfermera: todas las pacientes que necesitan que se las
-# contacte porque no cargaron ningún dato en varios días.
+# Vista de la enfermera: cada paciente activa con su trimestre, los estudios
+# que le faltan según la semana en la que está, y si dejó de cargar datos.
 # -----------------------------------------------------------------------
 @monitoring_bp.route("/api/monitoring", methods=["GET"])
 @nurse_required
 def get_monitoring_notifications():
     resultado = []
     for patient in Patient.query.filter_by(estado="Activo").all():
-        estado = estado_monitoreo(patient)
-        if estado["necesita_control"]:
-            resultado.append(
-                {
-                    "patient_id": patient.id,
-                    "patient_name": f"{patient.nombre} {patient.apellido}",
-                    "patient_dni": patient.dni,
-                    **estado,
-                }
-            )
+        embarazo = info_embarazo(patient.fecha_parto)
+        faltantes = []
+        if embarazo:
+            realizados = {r.examen: r.fecha_realizado for r in patient.exam_records}
+            faltantes = [
+                e
+                for e in estado_estudios(embarazo["semana"], realizados)
+                if e["estado"] in ("pendiente", "atrasado")
+            ]
+        resultado.append(
+            {
+                "patient_id": patient.id,
+                "patient_name": f"{patient.nombre} {patient.apellido}",
+                "patient_dni": patient.dni,
+                "embarazo": embarazo,
+                "estudios_faltantes": faltantes,
+                **estado_monitoreo(patient),
+            }
+        )
 
-    resultado.sort(
-        key=lambda a: (a["dias_sin_control"] is not None, a["dias_sin_control"] or 0),
-        reverse=True,
-    )
+    # Primero las que tienen algo atrasado o dejaron de controlarse, después
+    # las que tienen estudios en ventana, y al final las que están al día.
+    def prioridad(p):
+        atrasados = sum(1 for e in p["estudios_faltantes"] if e["estado"] == "atrasado")
+        return (atrasados > 0 or p["necesita_control"], len(p["estudios_faltantes"]), atrasados)
+
+    resultado.sort(key=prioridad, reverse=True)
     return jsonify(resultado), 200
 
 
