@@ -109,7 +109,10 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
       loadSymptomRecords();
     }
     if (activeView === "messages") loadMessages();
-    if (activeView === "alerts") loadAlerts();
+    if (activeView === "alerts") {
+      loadPatients();
+      loadAlerts();
+    }
     if (activeView === "monitoring") loadMonitoring();
     if (activeView === "agenda") {
       loadPatients();
@@ -258,6 +261,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
         {activeView === "alerts" && (
           <AlertsPanel
             alerts={alerts}
+            patients={patients}
             onAlertUpdated={(updated) =>
               setAlerts((prev) =>
                 prev.map((a) => (a.tipo === updated.tipo && a.id === updated.id ? updated : a))

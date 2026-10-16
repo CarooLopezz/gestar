@@ -44,11 +44,30 @@ function trimestreDeSemana(semana) {
   return 3;
 }
 
-// Trimestre de un día cualquiera del calendario, o null si cae fuera del embarazo.
-function trimestreDelDia(dia, fechaParto) {
+// Semana de embarazo de un día cualquiera, o null si cae fuera del embarazo.
+function semanaDelDia(dia, fechaParto) {
   const diasGestacion = DURACION_DIAS - Math.round((fechaParto - dia) / DIA_MS);
   if (diasGestacion < 0 || diasGestacion > DURACION_DIAS) return null;
-  return trimestreDeSemana(Math.floor(diasGestacion / 7));
+  return Math.floor(diasGestacion / 7);
+}
+
+function trimestreDelDia(dia, fechaParto) {
+  const semana = semanaDelDia(dia, fechaParto);
+  return semana === null ? null : trimestreDeSemana(semana);
+}
+
+// Días del calendario en los que conviene hacerse un estudio, a partir de
+// su ventana de semanas.
+function ventanaEstudio(estudio, fechaParto) {
+  const inicio = addDays(fechaParto, -DURACION_DIAS);
+  return {
+    desde: addDays(inicio, estudio.semana_desde * 7),
+    hasta: addDays(inicio, (estudio.semana_hasta + 1) * 7 - 1),
+  };
+}
+
+function fechaLarga(date) {
+  return `${date.getDate()} de ${MESES[date.getMonth()]}`;
 }
 
 export default function PatientAgenda({ patient, showToast }) {
@@ -154,7 +173,7 @@ export default function PatientAgenda({ patient, showToast }) {
         <BarraTrimestres semana={embarazo.semana} fechaParto={fechaParto} />
       </section>
 
-      <Calendario fechaParto={fechaParto} turnos={turnos} />
+      <Calendario fechaParto={fechaParto} turnos={turnos} estudios={estudios} />
 
       <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
         <div>
@@ -176,7 +195,13 @@ export default function PatientAgenda({ patient, showToast }) {
           ) : (
             <div className="space-y-2">
               {enVentana.map((e) => (
-                <EstudioRow key={e.key} estudio={e} busy={busyKey === e.key} onToggle={() => toggleEstudio(e)} />
+                <EstudioRow
+                  key={e.key}
+                  estudio={e}
+                  fechaParto={fechaParto}
+                  busy={busyKey === e.key}
+                  onToggle={() => toggleEstudio(e)}
+                />
               ))}
             </div>
           )}
@@ -187,27 +212,19 @@ export default function PatientAgenda({ patient, showToast }) {
             <h3 className="font-medium text-gray-700 mb-2">Ya te hiciste</h3>
             <div className="space-y-2">
               {hechos.map((e) => (
-                <EstudioRow key={e.key} estudio={e} busy={busyKey === e.key} onToggle={() => toggleEstudio(e)} />
+                <EstudioRow
+                  key={e.key}
+                  estudio={e}
+                  fechaParto={fechaParto}
+                  busy={busyKey === e.key}
+                  onToggle={() => toggleEstudio(e)}
+                />
               ))}
             </div>
           </div>
         )}
 
-        {proximos.length > 0 && (
-          <div>
-            <h3 className="font-medium text-gray-700 mb-2">Más adelante</h3>
-            <ul className="space-y-1 text-sm text-gray-500">
-              {proximos.map((e) => (
-                <li key={e.key} className="flex justify-between gap-4">
-                  <span>{e.nombre}</span>
-                  <span className="shrink-0 text-xs text-gray-400">
-                    semana {e.semana_desde} a {e.semana_hasta}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {proximos.length > 0 && <ProximosEstudios estudios={proximos} fechaParto={fechaParto} />}
       </section>
 
       {turnos.length > 0 && (
@@ -233,9 +250,25 @@ export default function PatientAgenda({ patient, showToast }) {
   );
 }
 
-function EstudioRow({ estudio, busy, onToggle }) {
+// Solo el próximo estudio, para no llenar la pantalla: el resto se ve en el
+// calendario (🧪) a medida que se acerca.
+function ProximosEstudios({ estudios, fechaParto }) {
+  const proximo = estudios[0];
+  const mismoDia = estudios.filter((e) => e.semana_desde === proximo.semana_desde);
+  return (
+    <div className="border-t border-gray-100 pt-4 text-sm">
+      <p className="text-gray-500">
+        Tu próximo estudio: <span className="text-gray-700">{mismoDia.map((e) => e.nombre).join(" y ")}</span>, a
+        partir del {fechaLarga(ventanaEstudio(proximo, fechaParto).desde)}.
+      </p>
+    </div>
+  );
+}
+
+function EstudioRow({ estudio, fechaParto, busy, onToggle }) {
   const hecho = estudio.estado === "hecho";
   const atrasado = estudio.estado === "atrasado";
+  const { desde, hasta } = ventanaEstudio(estudio, fechaParto);
   return (
     <div
       className={`flex items-center justify-between gap-4 rounded-lg px-3 py-2 text-sm ${
@@ -248,8 +281,8 @@ function EstudioRow({ estudio, busy, onToggle }) {
           {hecho
             ? `Hecho el ${formatFecha(estudio.fecha_realizado)}`
             : atrasado
-            ? `Atrasado: era entre la semana ${estudio.semana_desde} y la ${estudio.semana_hasta}`
-            : `Entre la semana ${estudio.semana_desde} y la ${estudio.semana_hasta}`}
+            ? `Atrasado: era hasta el ${fechaLarga(hasta)}. Hacételo cuanto antes.`
+            : `Hacételo antes del ${fechaLarga(hasta)} (desde el ${fechaLarga(desde)})`}
         </p>
       </div>
       <button
@@ -307,17 +340,31 @@ function BarraTrimestres({ semana, fechaParto }) {
   );
 }
 
-function Calendario({ fechaParto, turnos }) {
+function Calendario({ fechaParto, turnos, estudios }) {
   const [mes, setMes] = useState(() => {
     const h = hoy();
     return new Date(h.getFullYear(), h.getMonth(), 1);
   });
+  const [seleccionado, setSeleccionado] = useState(() => toISO(hoy()));
 
   const turnosPorDia = useMemo(() => {
     const map = new Map();
     turnos.forEach((t) => map.set(t.fecha, [...(map.get(t.fecha) || []), t]));
     return map;
   }, [turnos]);
+
+  // Estudios que todavía no se hizo, con su ventana en fechas.
+  const estudiosConFechas = useMemo(
+    () =>
+      estudios
+        .filter((e) => e.estado !== "hecho")
+        .map((e) => {
+          const { desde, hasta } = ventanaEstudio(e, fechaParto);
+          return { ...e, desdeISO: toISO(desde), hastaISO: toISO(hasta), hasta };
+        }),
+    [estudios, fechaParto]
+  );
+  const iniciosDeEstudio = useMemo(() => new Set(estudiosConFechas.map((e) => e.desdeISO)), [estudiosConFechas]);
 
   const hoyISO = toISO(hoy());
   const partoISO = toISO(fechaParto);
@@ -363,20 +410,25 @@ function Calendario({ fechaParto, turnos }) {
           if (!dia) return <div key={`v${i}`} />;
           const iso = toISO(dia);
           const tri = trimestreDelDia(dia, fechaParto);
-          const turnosDia = turnosPorDia.get(iso);
+          const marcas = [
+            iso === partoISO && "👶",
+            turnosPorDia.has(iso) && "📅",
+            iniciosDeEstudio.has(iso) && "🧪",
+          ].filter(Boolean);
           return (
-            <div
+            <button
               key={iso}
-              title={turnosDia ? turnosDia.map((t) => `${t.hora} ${t.tipo}`).join("\n") : undefined}
-              className={`relative aspect-square flex flex-col items-center justify-center rounded-lg ${
+              onClick={() => setSeleccionado(iso)}
+              aria-pressed={iso === seleccionado}
+              className={`aspect-square flex flex-col items-center justify-center rounded-lg transition ${
                 tri ? TRIMESTRES[tri].dia : "text-gray-400"
-              } ${iso === hoyISO ? "ring-2 ring-pink-500 font-semibold" : ""}`}
+              } ${iso === hoyISO ? "font-bold" : ""} ${
+                iso === seleccionado ? "ring-2 ring-pink-500" : "hover:ring-1 hover:ring-pink-300"
+              }`}
             >
               {dia.getDate()}
-              <span className="text-[10px] leading-none h-3">
-                {iso === partoISO ? "👶" : turnosDia ? "📅" : ""}
-              </span>
-            </div>
+              <span className="text-[10px] leading-none h-3">{marcas.join("")}</span>
+            </button>
           );
         })}
       </div>
@@ -389,9 +441,50 @@ function Calendario({ fechaParto, turnos }) {
           </span>
         ))}
         <span>📅 turno</span>
+        <span>🧪 empieza un estudio</span>
         <span>👶 fecha probable de parto</span>
       </div>
+
+      <DetalleDia
+        iso={seleccionado}
+        esHoy={seleccionado === hoyISO}
+        fechaParto={fechaParto}
+        turnos={turnosPorDia.get(seleccionado) || []}
+        estudios={estudiosConFechas.filter((e) => e.desdeISO <= seleccionado && seleccionado <= e.hastaISO)}
+      />
     </section>
+  );
+}
+
+function DetalleDia({ iso, esHoy, fechaParto, turnos, estudios }) {
+  const dia = parseISO(iso);
+  const semana = semanaDelDia(dia, fechaParto);
+  const esParto = iso === toISO(fechaParto);
+  const nada = turnos.length === 0 && estudios.length === 0 && !esParto;
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-100 text-sm">
+      <p className="font-medium text-gray-700">
+        {esHoy ? "Hoy, " : ""}
+        {fechaLarga(dia)}
+        {semana !== null && <span className="font-normal text-gray-400"> · semana {semana}</span>}
+      </p>
+      <div className="mt-2 space-y-1.5">
+        {esParto && <p className="text-pink-700">👶 Tu fecha probable de parto</p>}
+        {turnos.map((t) => (
+          <p key={t.id} className="text-gray-700">
+            📅 Turno: {t.tipo} a las {t.hora}
+          </p>
+        ))}
+        {estudios.map((e) => (
+          <p key={e.key} className={e.estado === "atrasado" ? "text-red-700" : "text-gray-700"}>
+            🧪 {e.nombre}
+            <span className="text-xs text-gray-400"> · hasta el {fechaLarga(e.hasta)}</span>
+          </p>
+        ))}
+        {nada && <p className="text-gray-400">No tenés nada para este día.</p>}
+      </div>
+    </div>
   );
 }
 

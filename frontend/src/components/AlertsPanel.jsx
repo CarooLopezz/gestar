@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { api } from "../api/client";
+import PatientDetailModal from "./PatientDetailModal";
 
 // Paleta cíclica para diferenciar visualmente a qué paciente pertenece cada
 // alerta (no indica gravedad, solo agrupa filas de la misma persona). Empieza
@@ -18,9 +19,11 @@ const COLORS = [
   { row: "bg-red-100", border: "border-red-500", dot: "bg-red-500" },
 ];
 
-export default function AlertsPanel({ alerts, onAlertUpdated, onAlertDismissed, showToast }) {
+export default function AlertsPanel({ alerts, patients, onAlertUpdated, onAlertDismissed, showToast }) {
   const [drafts, setDrafts] = useState({});
   const [busyKey, setBusyKey] = useState(null);
+  const [detailAlert, setDetailAlert] = useState(null);
+  const detailPatient = detailAlert && patients.find((p) => p.dni === detailAlert.patient_dni);
 
   const colorByPatient = useMemo(() => {
     const map = new Map();
@@ -84,8 +87,18 @@ export default function AlertsPanel({ alerts, onAlertUpdated, onAlertDismissed, 
                   <span className={`w-2.5 h-2.5 rounded-full ${color.dot}`} />
                   {a.patient_name}
                 </span>
-                <span className="text-xs text-gray-500 shrink-0">
-                  {a.fecha} {a.hora}
+                <span className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-gray-500">
+                    {a.fecha} {a.hora}
+                  </span>
+                  <button
+                    onClick={() => setDetailAlert(a)}
+                    title="Ver resumen de la paciente"
+                    aria-label={`Ver resumen de ${a.patient_name}`}
+                    className="w-7 h-7 flex items-center justify-center rounded-full bg-white/80 text-gray-600 hover:bg-white hover:text-gray-800 text-lg leading-none shadow-sm"
+                  >
+                    +
+                  </button>
                 </span>
               </div>
               <p className="text-sm text-gray-700 mb-2">{a.detalle}</p>
@@ -144,6 +157,15 @@ export default function AlertsPanel({ alerts, onAlertUpdated, onAlertDismissed, 
           </p>
         )}
       </div>
+
+      {detailPatient && (
+        <PatientDetailModal
+          patient={detailPatient}
+          highlight={detailAlert}
+          onClose={() => setDetailAlert(null)}
+          showToast={showToast}
+        />
+      )}
     </div>
   );
 }

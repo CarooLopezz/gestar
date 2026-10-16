@@ -91,6 +91,7 @@ def get_alerts():
             "tipo": "peso",
             "id": r.id,
             "patient_name": f"{r.patient.nombre} {r.patient.apellido}",
+            "patient_dni": r.patient.dni,
             "fecha": r.fecha,
             "hora": r.hora,
             "detalle": f"{r.peso} kg",
@@ -103,6 +104,7 @@ def get_alerts():
             "tipo": "presion",
             "id": r.id,
             "patient_name": f"{r.patient.nombre} {r.patient.apellido}",
+            "patient_dni": r.patient.dni,
             "fecha": r.fecha,
             "hora": r.hora,
             "detalle": f"{r.sistolica}/{r.diastolica} mmHg",
@@ -119,6 +121,7 @@ def get_alerts():
                 if r.patient_dni in patients_by_dni
                 else r.patient_dni
             ),
+            "patient_dni": r.patient_dni,
             "fecha": r.fecha,
             "hora": r.hora,
             "detalle": ", ".join(f"{s['nombre']} ({s['gravedad']})" for s in r.symptoms),
