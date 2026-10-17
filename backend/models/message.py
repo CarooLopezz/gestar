@@ -1,7 +1,8 @@
 from extensions import db
+from models.auditoria import RespuestaAuditada, nombre_enfermero
 
 
-class Message(db.Model):
+class Message(RespuestaAuditada, db.Model):
     __tablename__ = "messages"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -25,4 +26,5 @@ class Message(db.Model):
             "respuesta": self.respuesta,
             "fecha_respuesta": self.fecha_respuesta,
             "hora_respuesta": self.hora_respuesta,
+            "respondido_por": nombre_enfermero(self.respondido_por),
         }

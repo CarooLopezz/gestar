@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api } from "../api/client";
 import PatientDetailModal from "./PatientDetailModal";
 import { formatFecha } from "../utils/fecha";
+import MisPacientesToggle from "./MisPacientesToggle";
 
 function ActionIcons({ patient, isBusy, confirming, onDetail, onEdit, onAskDelete, onConfirmDelete, onCancelDelete }) {
   if (confirming) {
@@ -51,8 +52,16 @@ function ActionIcons({ patient, isBusy, confirming, onDetail, onEdit, onAskDelet
   );
 }
 
-export default function PatientListTable({ patients, onPatientUpdated, onPatientDeleted, showToast }) {
+export default function PatientListTable({
+  patients,
+  nurses = [],
+  currentNurseId,
+  onPatientUpdated,
+  onPatientDeleted,
+  showToast,
+}) {
   const [search, setSearch] = useState("");
+  const [soloMias, setSoloMias] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [editErrors, setEditErrors] = useState({});
@@ -62,13 +71,13 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return patients;
-    return patients.filter((p) =>
-      [p.nombre, p.apellido, p.dni, p.email].some((field) =>
-        (field || "").toLowerCase().includes(term)
-      )
+    return patients.filter(
+      (p) =>
+        (!soloMias || p.nurse_id === currentNurseId) &&
+        (!term ||
+          [p.nombre, p.apellido, p.dni, p.email].some((field) => (field || "").toLowerCase().includes(term)))
     );
-  }, [patients, search]);
+  }, [patients, search, soloMias, currentNurseId]);
 
   const startEdit = (p) => {
     setEditingId(p.id);
@@ -78,6 +87,7 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
       dni: p.dni,
       email: p.email,
       fecha_parto: p.fecha_parto || "",
+      nurse_id: p.nurse_id ? String(p.nurse_id) : "",
     });
     setEditErrors({});
   };
@@ -90,7 +100,10 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
   const saveEdit = async (id) => {
     setBusyId(id);
     try {
-      const updated = await api.updatePatient(id, editForm);
+      const updated = await api.updatePatient(id, {
+        ...editForm,
+        nurse_id: editForm.nurse_id ? Number(editForm.nurse_id) : null,
+      });
       onPatientUpdated(updated);
       setEditingId(null);
       showToast("Datos actualizados correctamente");
@@ -179,6 +192,22 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
         />
         {editErrors.fecha_parto && <p className="text-red-500 text-xs mt-1">{editErrors.fecha_parto}</p>}
       </div>
+      <div>
+        {stacked && <label className="text-xs text-gray-400">Enfermero/a de referencia</label>}
+        <select
+          value={editForm.nurse_id}
+          onChange={(e) => setEditForm((f) => ({ ...f, nurse_id: e.target.value }))}
+          className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+        >
+          <option value="">Sin asignar</option>
+          {nurses.map((n) => (
+            <option key={n.id} value={n.id}>
+              {n.nombre} {n.apellido}
+            </option>
+          ))}
+        </select>
+        {editErrors.nurse_id && <p className="text-red-500 text-xs mt-1">{editErrors.nurse_id}</p>}
+      </div>
     </div>
   );
 
@@ -190,13 +219,16 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Buscar por nombre, apellido, DNI o email..."
-        className="w-full border border-gray-200 rounded-lg px-3 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+        className="w-full border border-gray-200 rounded-lg px-3 py-2 mb-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
       />
+      <div className="mb-3">
+        <MisPacientesToggle checked={soloMias} onChange={setSoloMias} />
+      </div>
 
       {/* Desktop: tabla */}
       <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] text-sm text-left">
+          <table className="w-full min-w-[1000px] text-sm text-left">
             <thead className="bg-gray-50 text-gray-500">
               <tr>
                 <th className="px-4 py-3 font-medium">Nombre</th>
@@ -204,6 +236,7 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
                 <th className="px-4 py-3 font-medium">DNI</th>
                 <th className="px-4 py-3 font-medium">Email</th>
                 <th className="px-4 py-3 font-medium">Fecha de parto</th>
+                <th className="px-4 py-3 font-medium">Referente</th>
                 <th className="px-4 py-3 font-medium">Estado</th>
                 <th className="px-4 py-3 font-medium">Acciones</th>
               </tr>
@@ -216,8 +249,8 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
                   <tr key={p.id}>
                     {isEditing ? (
                       <>
-                        <td className="px-4 py-2" colSpan={5}>
-                          <div className="grid grid-cols-5 gap-2">
+                        <td className="px-4 py-2" colSpan={6}>
+                          <div className="grid grid-cols-6 gap-2">
                             <EditFields />
                           </div>
                         </td>
@@ -245,6 +278,9 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
                         <td className="px-4 py-3">{p.email}</td>
                         <td className="px-4 py-3">
                           {formatFecha(p.fecha_parto) || <span className="text-gray-400">No registrada</span>}
+                        </td>
+                        <td className="px-4 py-3">
+                          {p.enfermero_referencia || <span className="text-gray-400">Sin asignar</span>}
                         </td>
                         <td className="px-4 py-3">
                           <button
@@ -282,7 +318,7 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
           <p className="text-center text-gray-400 py-8 text-sm">No hay embarazadas registradas.</p>
         )}
         {patients.length > 0 && filtered.length === 0 && (
-          <p className="text-center text-gray-400 py-8 text-sm">Sin resultados para "{search}".</p>
+          <p className="text-center text-gray-400 py-8 text-sm">{search ? `Sin resultados para "${search}".` : "No tenés embarazadas asignadas."}</p>
         )}
       </div>
 
@@ -321,6 +357,9 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
                       <p className="text-xs text-gray-400">
                         Parto: {formatFecha(p.fecha_parto) || "No registrada"}
                       </p>
+                      <p className="text-xs text-gray-400">
+                        Referente: {p.enfermero_referencia || "Sin asignar"}
+                      </p>
                     </div>
                     <button
                       onClick={() => toggleEstado(p)}
@@ -356,7 +395,7 @@ export default function PatientListTable({ patients, onPatientUpdated, onPatient
         )}
         {patients.length > 0 && filtered.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm bg-white rounded-2xl border border-gray-100">
-            Sin resultados para "{search}".
+            {search ? `Sin resultados para "${search}".` : "No tenés embarazadas asignadas."}
           </p>
         )}
       </div>

@@ -1,13 +1,21 @@
+import { useState } from "react";
+import MisPacientesToggle from "./MisPacientesToggle";
+
 const TRIMESTRE_CHIP = {
   1: { nombre: "1.er trimestre", clase: "bg-pink-50 text-pink-700" },
   2: { nombre: "2.º trimestre", clase: "bg-violet-50 text-violet-700" },
   3: { nombre: "3.er trimestre", clase: "bg-amber-50 text-amber-700" },
 };
 
-export default function MonitoringPanel({ notifications }) {
+export default function MonitoringPanel({ notifications: todas, currentNurseId }) {
+  const [soloMias, setSoloMias] = useState(false);
+  const notifications = soloMias ? todas.filter((n) => n.nurse_id === currentNurseId) : todas;
   return (
     <div className="fade-in max-w-3xl">
       <h2 className="text-xl font-semibold text-gray-800 mb-1">Monitoreo</h2>
+      <div className="mb-3">
+        <MisPacientesToggle checked={soloMias} onChange={setSoloMias} />
+      </div>
       <p className="text-sm text-gray-400 mb-4">
         En qué trimestre va cada embarazada, qué estudios le faltan según su semana y quién dejó de cargar
         datos.
@@ -38,7 +46,9 @@ export default function MonitoringPanel({ notifications }) {
                       <span className="text-gray-400">Sin fecha probable de parto: no se puede calcular el trimestre</span>
                     )}
                   </p>
-                  <p className="text-xs text-gray-400">DNI {n.patient_dni}</p>
+                  <p className="text-xs text-gray-400">
+                    DNI {n.patient_dni} · Referente: {n.enfermero_referencia || "sin asignar"}
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {chip && <span className={`px-3 py-1 rounded-full text-xs font-medium ${chip.clase}`}>{chip.nombre}</span>}
@@ -74,7 +84,7 @@ export default function MonitoringPanel({ notifications }) {
         })}
         {notifications.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm bg-white rounded-2xl border border-gray-100">
-            No hay embarazadas activas.
+            {soloMias ? "No tenés embarazadas asignadas." : "No hay embarazadas activas."}
           </p>
         )}
       </div>

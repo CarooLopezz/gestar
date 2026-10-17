@@ -105,7 +105,10 @@ export default function RecordWeight({ patient, showToast }) {
               </div>
               {r.respuesta && (
                 <div className="bg-pink-50 rounded-lg p-3 text-sm text-gray-700 mt-2">
-                  <p className="text-xs font-medium text-pink-600 mb-1">💬 Respuesta de tu enfermera:</p>
+                  <p className="text-xs font-medium text-pink-600 mb-1">
+                    {r.respondido_por ? `💬 ${r.respondido_por} te respondió` : "💬 Respuesta de tu enfermera:"}
+                    {r.respondida_en && <span className="font-normal text-gray-400"> · {r.respondida_en}</span>}
+                  </p>
                   {r.respuesta}
                 </div>
               )}

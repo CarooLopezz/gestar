@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { api } from "../api/client";
 
-const emptyForm = { nombre: "", apellido: "", dni: "", email: "", fecha_parto: "" };
+const emptyForm = { nombre: "", apellido: "", dni: "", email: "", fecha_parto: "", nurse_id: "" };
 
-export default function RegisterUserForm({ onPatientCreated, onNurseCreated, showToast }) {
+export default function RegisterUserForm({ nurses = [], currentNurseId, onPatientCreated, onNurseCreated, showToast }) {
+  // Por defecto la embarazada queda a cargo de quien la registra.
+  const nuevoForm = () => ({ ...emptyForm, nurse_id: currentNurseId ? String(currentNurseId) : "" });
   const [role, setRole] = useState("embarazada");
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(nuevoForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -15,7 +17,7 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
 
   const handleRoleChange = (e) => {
     setRole(e.target.value);
-    setForm(emptyForm);
+    setForm(nuevoForm());
     setErrors({});
   };
 
@@ -31,6 +33,7 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
           dni: form.dni,
           email: form.email,
           fecha_parto: form.fecha_parto,
+          nurse_id: form.nurse_id ? Number(form.nurse_id) : null,
         });
         onPatientCreated(patient);
         showToast("Embarazada registrada correctamente");
@@ -44,7 +47,7 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
         onNurseCreated(nurse);
         showToast("Enfermero/a registrado correctamente");
       }
-      setForm(emptyForm);
+      setForm(nuevoForm());
     } catch (err) {
       if (err.data?.errors) {
         setErrors(err.data.errors);
@@ -119,6 +122,23 @@ export default function RegisterUserForm({ onPatientCreated, onNurseCreated, sho
               onChange={handleChange("fecha_parto")}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
             />
+          </Field>
+        )}
+
+        {role === "embarazada" && (
+          <Field label="Enfermero/a de referencia" error={errors.nurse_id}>
+            <select
+              value={form.nurse_id}
+              onChange={handleChange("nurse_id")}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            >
+              <option value="">Sin asignar</option>
+              {nurses.map((n) => (
+                <option key={n.id} value={n.id}>
+                  {n.nombre} {n.apellido}
+                </option>
+              ))}
+            </select>
           </Field>
         )}
 

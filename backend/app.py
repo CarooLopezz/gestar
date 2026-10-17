@@ -52,8 +52,17 @@ def add_missing_columns():
     existen (ej. la base de Render). Las columnas nuevas de tablas viejas se
     agregan acá; tienen que ser nullable para no romper las filas existentes.
     """
+    alerta_auditada = {
+        "respondido_por_id": "INTEGER REFERENCES nurses(id)",
+        "respondida_en": "TIMESTAMP",
+        "descartada_por_id": "INTEGER REFERENCES nurses(id)",
+    }
     nuevas = {
-        "patients": {"fecha_parto": "DATE"},
+        "patients": {"fecha_parto": "DATE", "nurse_id": "INTEGER REFERENCES nurses(id)"},
+        "bp_records": alerta_auditada,
+        "weight_records": alerta_auditada,
+        "symptom_records": alerta_auditada,
+        "messages": {"respondido_por_id": "INTEGER REFERENCES nurses(id)"},
     }
     inspector = db.inspect(db.engine)
     with db.engine.begin() as conn:

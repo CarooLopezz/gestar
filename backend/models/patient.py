@@ -12,6 +12,10 @@ class Patient(db.Model):
     estado = db.Column(db.String(20), nullable=False, default="Activo")
     hora_recordatorio = db.Column(db.String(5), nullable=True)
     fecha_parto = db.Column(db.Date, nullable=True)
+    # Enfermero/a de referencia (1:N: un enfermero tiene muchas embarazadas).
+    # Es organizativo: todo el equipo sigue viendo a todas las pacientes.
+    nurse_id = db.Column(db.Integer, db.ForeignKey("nurses.id"), nullable=True)
+    referente = db.relationship("Nurse", foreign_keys=[nurse_id])
 
     bp_records = db.relationship("BPRecord", backref="patient", cascade="all, delete-orphan")
     weight_records = db.relationship("WeightRecord", backref="patient", cascade="all, delete-orphan")
@@ -29,4 +33,8 @@ class Patient(db.Model):
             "estado": self.estado,
             "hora_recordatorio": self.hora_recordatorio,
             "fecha_parto": self.fecha_parto.isoformat() if self.fecha_parto else None,
+            "nurse_id": self.nurse_id,
+            "enfermero_referencia": (
+                f"{self.referente.nombre} {self.referente.apellido}" if self.referente else None
+            ),
         }

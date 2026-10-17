@@ -1,7 +1,8 @@
 from extensions import db
+from models.auditoria import AlertaAuditada
 
 
-class SymptomRecord(db.Model):
+class SymptomRecord(AlertaAuditada, db.Model):
     __tablename__ = "symptom_records"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -23,4 +24,5 @@ class SymptomRecord(db.Model):
             "alerta": self.alerta,
             "respuesta": self.respuesta,
             "descartada": self.descartada,
+            **self.auditoria_dict(),
         }

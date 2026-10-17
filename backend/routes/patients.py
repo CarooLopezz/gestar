@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, request
 
 from auth import nurse_required
 from extensions import db
-from models import BPRecord, Patient, SymptomRecord
+from models import BPRecord, Nurse, Patient, SymptomRecord
 
 patients_bp = Blueprint("patients", __name__)
 
@@ -55,6 +55,10 @@ def validate_patient_payload(data, patient_id=None, current_fecha_parto=None):
     fecha_parto, fecha_error = parse_fecha_parto(data.get("fecha_parto"), current_fecha_parto)
     if fecha_error:
         errors["fecha_parto"] = fecha_error
+
+    nurse_id = data.get("nurse_id") or None
+    if nurse_id is not None and Nurse.query.get(nurse_id) is None:
+        errors["nurse_id"] = "Enfermero/a no encontrado"
     if not nombre:
         errors["nombre"] = "Campo obligatorio"
     if not apellido:
@@ -72,7 +76,7 @@ def validate_patient_payload(data, patient_id=None, current_fecha_parto=None):
     elif "@" not in email or "." not in email.split("@")[-1]:
         errors["email"] = "Formato de email inválido"
 
-    return nombre, apellido, dni, email, fecha_parto, errors
+    return nombre, apellido, dni, email, fecha_parto, nurse_id, errors
 
 
 @patients_bp.route("/api/patients", methods=["GET"])
@@ -86,7 +90,7 @@ def get_patients():
 @nurse_required
 def create_patient():
     data = request.get_json(force=True, silent=True) or {}
-    nombre, apellido, dni, email, fecha_parto, errors = validate_patient_payload(data)
+    nombre, apellido, dni, email, fecha_parto, nurse_id, errors = validate_patient_payload(data)
 
     if errors:
         return jsonify({"errors": errors}), 400
@@ -97,6 +101,7 @@ def create_patient():
         dni=dni,
         email=email,
         fecha_parto=fecha_parto,
+        nurse_id=nurse_id,
         estado="Activo",
     )
     db.session.add(patient)
@@ -112,7 +117,7 @@ def update_patient(patient_id):
         return jsonify({"error": "Paciente no encontrada"}), 404
 
     data = request.get_json(force=True, silent=True) or {}
-    nombre, apellido, dni, email, fecha_parto, errors = validate_patient_payload(
+    nombre, apellido, dni, email, fecha_parto, nurse_id, errors = validate_patient_payload(
         data, patient_id=patient_id, current_fecha_parto=patient.fecha_parto
     )
 
@@ -125,6 +130,7 @@ def update_patient(patient_id):
     patient.dni = dni
     patient.email = email
     patient.fecha_parto = fecha_parto
+    patient.nurse_id = nurse_id
     db.session.commit()
 
     if old_dni != dni:

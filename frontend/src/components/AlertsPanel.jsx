@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { api } from "../api/client";
 import PatientDetailModal from "./PatientDetailModal";
+import MisPacientesToggle from "./MisPacientesToggle";
 
 // Paleta cíclica para diferenciar visualmente a qué paciente pertenece cada
 // alerta (no indica gravedad, solo agrupa filas de la misma persona). Empieza
@@ -19,7 +20,13 @@ const COLORS = [
   { row: "bg-red-100", border: "border-red-500", dot: "bg-red-500" },
 ];
 
-export default function AlertsPanel({ alerts, patients, onAlertUpdated, onAlertDismissed, showToast }) {
+export default function AlertsPanel({ alerts: todas, patients, currentNurseId, onAlertUpdated, onAlertDismissed, showToast }) {
+  const [soloMias, setSoloMias] = useState(false);
+  const misDnis = useMemo(
+    () => new Set(patients.filter((p) => p.nurse_id === currentNurseId).map((p) => p.dni)),
+    [patients, currentNurseId]
+  );
+  const alerts = soloMias ? todas.filter((a) => misDnis.has(a.patient_dni)) : todas;
   const [drafts, setDrafts] = useState({});
   const [busyKey, setBusyKey] = useState(null);
   const [detailAlert, setDetailAlert] = useState(null);
@@ -47,7 +54,12 @@ export default function AlertsPanel({ alerts, patients, onAlertUpdated, onAlertD
     setBusyKey(key);
     try {
       const updated = await api.respondAlert(a.tipo, a.id, mensaje);
-      onAlertUpdated({ ...a, respuesta: updated.respuesta });
+      onAlertUpdated({
+        ...a,
+        respuesta: updated.respuesta,
+        respondido_por: updated.respondido_por,
+        respondida_en: updated.respondida_en,
+      });
       setDrafts((prev) => ({ ...prev, [key]: "" }));
       showToast("Respuesta enviada, ya le llega a la paciente.");
     } catch (err) {
@@ -73,7 +85,10 @@ export default function AlertsPanel({ alerts, patients, onAlertUpdated, onAlertD
 
   return (
     <div className="fade-in">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Alertas</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 className="text-xl font-semibold text-gray-800">Alertas</h2>
+        <MisPacientesToggle checked={soloMias} onChange={setSoloMias} />
+      </div>
 
       <div className="space-y-3">
         {alerts.map((a) => {
@@ -117,7 +132,10 @@ export default function AlertsPanel({ alerts, patients, onAlertUpdated, onAlertD
 
               {a.respuesta ? (
                 <div className="bg-white/70 rounded-lg p-3 text-sm text-gray-700 mb-2">
-                  <p className="text-xs font-medium text-gray-500 mb-1">💬 Tu respuesta a la paciente:</p>
+                  <p className="text-xs font-medium text-gray-500 mb-1">
+                    💬 {a.respondido_por ? `Respondida por ${a.respondido_por}` : "Respuesta a la paciente"}
+                    {a.respondida_en && <span className="font-normal"> · {a.respondida_en}</span>}
+                  </p>
                   {a.respuesta}
                 </div>
               ) : (

@@ -89,6 +89,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
 
   useEffect(() => {
     loadPatients();
+    loadNurses();
   }, []);
 
   useEffect(() => {
@@ -190,6 +191,8 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         {activeView === "register" && (
           <RegisterUserForm
+            nurses={nurses}
+            currentNurseId={nurse?.id}
             onPatientCreated={(p) => setPatients((prev) => [...prev, p])}
             onNurseCreated={(n) => setNurses((prev) => [...prev, n])}
             showToast={showToast}
@@ -199,6 +202,8 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
           <div className="space-y-8">
             <PatientListTable
               patients={patients}
+              nurses={nurses}
+              currentNurseId={nurse?.id}
               onPatientUpdated={(updated) =>
                 setPatients((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
               }
@@ -262,6 +267,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
           <AlertsPanel
             alerts={alerts}
             patients={patients}
+            currentNurseId={nurse?.id}
             onAlertUpdated={(updated) =>
               setAlerts((prev) =>
                 prev.map((a) => (a.tipo === updated.tipo && a.id === updated.id ? updated : a))
@@ -275,7 +281,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
             showToast={showToast}
           />
         )}
-        {activeView === "monitoring" && <MonitoringPanel notifications={monitoring} />}
+        {activeView === "monitoring" && <MonitoringPanel notifications={monitoring} currentNurseId={nurse?.id} />}
         {activeView === "agenda" && (
           <Agenda
             patients={patients}

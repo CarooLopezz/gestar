@@ -94,6 +94,12 @@ export default function PatientPortal({ onBack, showToast }) {
 
         <div className="px-6 py-3 border-b border-gray-100 text-xs text-gray-500">
           Hola, {currentPatient.nombre} 👋
+          <p className="mt-1">
+            Tu enfermera/o de referencia:{" "}
+            <span className="font-medium text-gray-700">
+              {currentPatient.enfermero_referencia || "todavía sin asignar"}
+            </span>
+          </p>
         </div>
 
         <div className="px-6 py-3 border-b border-gray-100">

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 
 from auth import nurse_required
 from extensions import db
@@ -88,5 +88,6 @@ def responder_mensaje(message_id):
     record.respuesta = respuesta
     record.fecha_respuesta = fecha
     record.hora_respuesta = hora
+    record.respondido_por_id = session["nurse_id"]
     db.session.commit()
     return jsonify(record.to_dict()), 200

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 
 from auth import nurse_required
 from extensions import db
@@ -97,6 +97,7 @@ def get_alerts():
             "detalle": f"{r.peso} kg",
             "motivo": "Aumento de más de 2kg respecto del registro anterior",
             "respuesta": r.respuesta,
+            **r.auditoria_dict(),
         }
         for r in weight_alerts
     ] + [
@@ -110,6 +111,7 @@ def get_alerts():
             "detalle": f"{r.sistolica}/{r.diastolica} mmHg",
             "motivo": "Presión por encima de 120/80 (valor normal)",
             "respuesta": r.respuesta,
+            **r.auditoria_dict(),
         }
         for r in bp_alerts
     ] + [
@@ -127,6 +129,7 @@ def get_alerts():
             "detalle": ", ".join(f"{s['nombre']} ({s['gravedad']})" for s in r.symptoms),
             "motivo": "Síntoma reportado como Severo",
             "respuesta": r.respuesta,
+            **r.auditoria_dict(),
         }
         for r in symptom_alerts
     ]
@@ -157,6 +160,8 @@ def responder_alerta(tipo, record_id):
         return jsonify({"error": "Escribí una respuesta."}), 400
 
     record.respuesta = mensaje
+    record.respondido_por_id = session["nurse_id"]
+    record.respondida_en = datetime.now()
     db.session.commit()
     return jsonify(record.to_dict()), 200
 
@@ -173,6 +178,7 @@ def descartar_alerta(tipo, record_id):
         return jsonify({"error": "Registro no encontrado"}), 404
 
     record.descartada = True
+    record.descartada_por_id = session["nurse_id"]
     db.session.commit()
     return jsonify(record.to_dict()), 200
 

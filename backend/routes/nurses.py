@@ -2,7 +2,17 @@ from flask import Blueprint, jsonify, request, session
 
 from auth import nurse_required
 from extensions import db
-from models import Nurse
+from models import BPRecord, Message, Nurse, Patient, SymptomRecord, WeightRecord
+
+
+def tiene_actividad(nurse_id):
+    for modelo in (BPRecord, WeightRecord, SymptomRecord):
+        if modelo.query.filter(
+            (modelo.respondido_por_id == nurse_id) | (modelo.descartada_por_id == nurse_id)
+        ).first():
+            return True
+    return Message.query.filter_by(respondido_por_id=nurse_id).first() is not None
+
 
 nurses_bp = Blueprint("nurses", __name__)
 
@@ -144,6 +154,17 @@ def delete_nurse(nurse_id):
     if Nurse.query.count() <= 1:
         return jsonify({"error": "No se puede eliminar al único enfermero/a registrado."}), 400
 
+    # Auditoría: si respondió o descartó algo, borrarlo haría perder quién fue.
+    if tiene_actividad(nurse_id):
+        return jsonify(
+            {
+                "error": "No se puede eliminar: respondió o descartó alertas o mensajes, "
+                "y eso se conserva para auditoría."
+            }
+        ), 400
+
+    # Sus embarazadas quedan sin referente hasta que se les asigne otro.
+    Patient.query.filter_by(nurse_id=nurse_id).update({"nurse_id": None})
     db.session.delete(nurse)
     db.session.commit()
 

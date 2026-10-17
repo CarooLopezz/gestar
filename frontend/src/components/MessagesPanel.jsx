@@ -88,7 +88,9 @@ export default function MessagesPanel({ messages, onMessageUpdated, showToast })
 
               {latest.respuesta ? (
                 <div className="bg-purple-50 rounded-lg p-3 text-sm text-gray-700 mt-2">
-                  <p className="text-xs font-medium text-purple-600 mb-1">Tu respuesta:</p>
+                  <p className="text-xs font-medium text-purple-600 mb-1">
+                    {latest.respondido_por ? `Respondió ${latest.respondido_por}:` : "Respuesta:"}
+                  </p>
                   {latest.respuesta}
                   <p className="text-xs text-gray-400 mt-2">
                     {latest.fecha_respuesta} {latest.hora_respuesta}
@@ -125,7 +127,9 @@ export default function MessagesPanel({ messages, onMessageUpdated, showToast })
                       </div>
                       {m.respuesta && (
                         <div className="bg-purple-50 rounded-lg p-3 text-sm text-gray-700 mt-2">
-                          <p className="text-xs font-medium text-purple-600 mb-1">Tu respuesta:</p>
+                          <p className="text-xs font-medium text-purple-600 mb-1">
+                            {m.respondido_por ? `Respondió ${m.respondido_por}:` : "Respuesta:"}
+                          </p>
                           {m.respuesta}
                         </div>
                       )}

@@ -89,7 +89,9 @@ export default function PatientMessageForm({ patient, showToast }) {
               <p className="text-sm text-gray-700 whitespace-pre-wrap">{r.mensaje}</p>
               {r.respuesta ? (
                 <div className="bg-pink-50 rounded-lg p-3 text-sm text-gray-700 mt-3">
-                  <p className="text-xs font-medium text-pink-600 mb-1">💬 Respuesta de tu enfermera:</p>
+                  <p className="text-xs font-medium text-pink-600 mb-1">
+                    {r.respondido_por ? `💬 ${r.respondido_por} te respondió:` : "💬 Respuesta de tu enfermera:"}
+                  </p>
                   {r.respuesta}
                   <p className="text-xs text-gray-400 mt-2">
                     {r.fecha_respuesta} {r.hora_respuesta}

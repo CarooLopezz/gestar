@@ -1,7 +1,8 @@
 from extensions import db
+from models.auditoria import AlertaAuditada
 
 
-class WeightRecord(db.Model):
+class WeightRecord(AlertaAuditada, db.Model):
     __tablename__ = "weight_records"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -24,4 +25,5 @@ class WeightRecord(db.Model):
             "alerta": self.alerta,
             "respuesta": self.respuesta,
             "descartada": self.descartada,
+            **self.auditoria_dict(),
         }

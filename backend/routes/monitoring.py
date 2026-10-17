@@ -72,6 +72,8 @@ def get_monitoring_notifications():
                 "patient_id": patient.id,
                 "patient_name": f"{patient.nombre} {patient.apellido}",
                 "patient_dni": patient.dni,
+                "nurse_id": patient.nurse_id,
+                "enfermero_referencia": patient.to_dict()["enfermero_referencia"],
                 "embarazo": embarazo,
                 "estudios_faltantes": faltantes,
                 **estado_monitoreo(patient),

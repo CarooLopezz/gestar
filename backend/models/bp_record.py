@@ -1,7 +1,8 @@
 from extensions import db
+from models.auditoria import AlertaAuditada
 
 
-class BPRecord(db.Model):
+class BPRecord(AlertaAuditada, db.Model):
     __tablename__ = "bp_records"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -26,4 +27,5 @@ class BPRecord(db.Model):
             "alerta": self.alerta,
             "respuesta": self.respuesta,
             "descartada": self.descartada,
+            **self.auditoria_dict(),
         }
