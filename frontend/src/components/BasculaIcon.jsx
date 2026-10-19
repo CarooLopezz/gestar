@@ -4,10 +4,10 @@ export default function BasculaIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="1.1em"
-      height="1.1em"
+      width="1.4em"
+      height="1.4em"
       aria-hidden="true"
-      className="inline-block align-[-0.15em]"
+      className="inline-block align-[-0.3em] -mx-[0.1em]"
     >
       <rect x="3" y="3" width="18" height="18" rx="4" fill="#ccfbf1" stroke="#0f766e" strokeWidth="1.6" />
       <path d="M7.5 9.5a4.5 4.5 0 0 1 9 0z" fill="#ffffff" stroke="#0f766e" strokeWidth="1.4" />
