@@ -144,7 +144,10 @@ export default function PatientListTable({
     }
   };
 
-  const EditFields = ({ stacked }) => (
+  // Se llama como función, no como componente: definido acá adentro sería
+  // un componente nuevo en cada render y React recrearía los inputs con cada
+  // tecla (se pierde el foco).
+  const renderEditFields = ({ stacked } = {}) => (
     <div className={stacked ? "space-y-2" : "contents"}>
       <div>
         {stacked && <label className="text-xs text-gray-400">Nombre</label>}
@@ -251,7 +254,7 @@ export default function PatientListTable({
                       <>
                         <td className="px-4 py-2" colSpan={6}>
                           <div className="grid grid-cols-6 gap-2">
-                            <EditFields />
+                            {renderEditFields()}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-gray-400">{p.estado}</td>
@@ -331,7 +334,7 @@ export default function PatientListTable({
             <div key={p.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
               {isEditing ? (
                 <>
-                  <EditFields stacked />
+                  {renderEditFields({ stacked: true })}
                   <div className="flex gap-3 mt-3">
                     <button
                       onClick={() => saveEdit(p.id)}
