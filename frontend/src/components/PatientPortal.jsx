@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
+import BasculaIcon from "./BasculaIcon";
 import PatientLoginForm from "./PatientLoginForm";
 import SymptomsForm from "./SymptomsForm";
 import RecordBloodPressure from "./RecordBloodPressure";
@@ -12,7 +13,7 @@ const NAV_ITEMS = [
   { id: "agenda", label: "Agenda", icon: "📅" },
   { id: "symptoms", label: "Síntomas", icon: "🤒" },
   { id: "bp", label: "Presión arterial", icon: "🩺" },
-  { id: "weight", label: "Peso", icon: "⚖️" },
+  { id: "weight", label: "Peso", icon: <BasculaIcon /> },
   { id: "messages", label: "Mensajes", icon: "💬" },
 ];
 
