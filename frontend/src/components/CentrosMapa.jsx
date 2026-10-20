@@ -1,7 +1,9 @@
 import "leaflet/dist/leaflet.css";
-import { useEffect } from "react";
-import { CircleMarker, MapContainer, Popup, TileLayer, useMap } from "react-leaflet";
+import { useEffect, useState } from "react";
+import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { api } from "../api/client";
 import useUbicacion from "../hooks/useUbicacion";
+import { TIPOS_CENTRO, iconoCentro } from "../utils/centros";
 
 // Centro del Gran Mendoza (Ciudad de Mendoza).
 const MENDOZA = [-32.8895, -68.8458];
@@ -17,6 +19,11 @@ function Recentrar({ punto, zoom }) {
 
 export default function CentrosMapa() {
   const { estado, coords, pedir } = useUbicacion();
+  const [centros, setCentros] = useState([]);
+
+  useEffect(() => {
+    api.getCentros().then(setCentros).catch(() => setCentros([]));
+  }, []);
 
   return (
     <div className="fade-in w-full max-w-3xl space-y-4">
@@ -45,6 +52,15 @@ export default function CentrosMapa() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <Recentrar punto={coords} zoom={15} />
+          {centros.map((c) => (
+            <Marker key={c.id} position={[c.lat, c.lng]} icon={iconoCentro(c.tipo)}>
+              <Popup>
+                <strong>{c.nombre}</strong>
+                <br />
+                {TIPOS_CENTRO[c.tipo]?.nombre}
+              </Popup>
+            </Marker>
+          ))}
           {coords && (
             <CircleMarker
               center={coords}
@@ -55,6 +71,24 @@ export default function CentrosMapa() {
             </CircleMarker>
           )}
         </MapContainer>
+      </div>
+
+      <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-600">
+        {Object.entries(TIPOS_CENTRO).map(([tipo, t]) => (
+          <span key={tipo} className="flex items-center gap-1.5">
+            <span
+              className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-xs"
+              style={{ border: `2px solid ${t.color}` }}
+            >
+              {t.icono}
+            </span>
+            {t.nombre}
+          </span>
+        ))}
+        <span className="flex items-center gap-1.5">
+          <span className="w-3.5 h-3.5 rounded-full bg-blue-600 ring-2 ring-white shadow" />
+          Tu ubicación
+        </span>
       </div>
     </div>
   );

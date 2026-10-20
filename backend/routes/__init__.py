@@ -9,6 +9,7 @@ from .messages import messages_bp
 from .monitoring import monitoring_bp
 from .appointments import appointments_bp
 from .pregnancy import pregnancy_bp
+from .health_centers import health_centers_bp
 
 
 def register_routes(app):
@@ -23,3 +24,4 @@ def register_routes(app):
     app.register_blueprint(monitoring_bp)
     app.register_blueprint(appointments_bp)
     app.register_blueprint(pregnancy_bp)
+    app.register_blueprint(health_centers_bp)

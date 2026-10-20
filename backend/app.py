@@ -10,6 +10,7 @@ from flask_cors import CORS
 
 from extensions import db
 from routes import register_routes
+from routes.health_centers import cargar_centros_iniciales
 
 load_dotenv()
 
@@ -76,6 +77,7 @@ def add_missing_columns():
 with app.app_context():
     db.create_all()
     add_missing_columns()
+    cargar_centros_iniciales()
 
 if __name__ == "__main__":
     app.run(debug=not IS_PRODUCTION, port=int(os.environ.get("PORT", 5000)))
