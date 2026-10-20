@@ -4,7 +4,8 @@ import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from "re
 import { api } from "../api/client";
 import useConexion from "../hooks/useConexion";
 import useUbicacion from "../hooks/useUbicacion";
-import { TIPOS_CENTRO, distanciaKm, formatDistancia, iconoCentro, linkComoLlegar } from "../utils/centros";
+import { TIPOS_CENTRO, iconoCentro, linkComoLlegar } from "../utils/centros";
+import { formatDistancia, ordenarCentros } from "../utils/distancia";
 
 // Centro del Gran Mendoza (Ciudad de Mendoza).
 const MENDOZA = [-32.8895, -68.8458];
@@ -147,14 +148,7 @@ export default function CentrosMapa() {
   }, [online]);
 
   // Con ubicación: del más cercano al más lejano. Sin ella: por nombre.
-  const lista = useMemo(() => {
-    const filtrados = centros
-      .filter((c) => tipo === "todos" || c.tipo === tipo)
-      .map((c) => ({ ...c, distancia: coords ? distanciaKm(coords, [c.lat, c.lng]) : null }));
-    return coords
-      ? filtrados.sort((a, b) => a.distancia - b.distancia)
-      : filtrados.sort((a, b) => a.nombre.localeCompare(b.nombre));
-  }, [centros, tipo, coords]);
+  const lista = useMemo(() => ordenarCentros(centros, coords, tipo), [centros, tipo, coords]);
 
   const elegir = (c) => {
     setElegido(c);
