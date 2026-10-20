@@ -113,4 +113,6 @@ export const api = {
     request(`/agenda/patient/${encodeURIComponent(dni)}/estudios/${key}`, { method: "POST" }),
   desmarcarEstudio: (dni, key) =>
     request(`/agenda/patient/${encodeURIComponent(dni)}/estudios/${key}`, { method: "DELETE" }),
+
+  getCentros: () => request("/centros"),
 };

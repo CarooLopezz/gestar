@@ -6,6 +6,7 @@ from .weight_record import WeightRecord
 from .message import Message
 from .appointment import Appointment
 from .exam_record import ExamRecord
+from .health_center import HealthCenter
 
 __all__ = [
     "Patient",
@@ -16,4 +17,5 @@ __all__ = [
     "Message",
     "Appointment",
     "ExamRecord",
+    "HealthCenter",
 ]

@@ -8,6 +8,7 @@ import RecordWeight from "./RecordWeight";
 import PatientMessageForm from "./PatientMessageForm";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
 import PatientAgenda from "./PatientAgenda";
+import CentrosMapa from "./CentrosMapa";
 
 const NAV_ITEMS = [
   { id: "agenda", label: "Agenda", icon: "📅" },
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
   { id: "bp", label: "Presión arterial", icon: "🩺" },
   { id: "weight", label: "Peso", icon: <BasculaIcon /> },
   { id: "messages", label: "Mensajes", icon: "💬" },
+  { id: "centros", label: "Centros de salud", icon: "🏥" },
 ];
 
 export default function PatientPortal({ onBack, showToast }) {
@@ -178,6 +180,7 @@ export default function PatientPortal({ onBack, showToast }) {
           )}
 
           {activeView === "agenda" && <PatientAgenda patient={currentPatient} showToast={showToast} />}
+          {activeView === "centros" && <CentrosMapa />}
           {activeView === "symptoms" && (
             <SymptomsForm patient={currentPatient} showToast={showToast} />
           )}
