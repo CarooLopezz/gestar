@@ -2,12 +2,63 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { api } from "../api/client";
+import useConexion from "../hooks/useConexion";
 import useUbicacion from "../hooks/useUbicacion";
 import { TIPOS_CENTRO, distanciaKm, formatDistancia, iconoCentro, linkComoLlegar } from "../utils/centros";
 
 // Centro del Gran Mendoza (Ciudad de Mendoza).
 const MENDOZA = [-32.8895, -68.8458];
 const POR_PAGINA = 8;
+const CACHE_KEY = "gestar.centros";
+
+// Qué decirle a la paciente según por qué no hay ubicación.
+const MENSAJES_UBICACION = {
+  denegada: {
+    titulo: "No tenemos permiso para ver tu ubicación",
+    texto:
+      "Para activarlo, tocá el candado al lado de la dirección de la página, buscá \"Ubicación\" y elegí \"Permitir\". Mientras tanto podés ver todos los centros.",
+  },
+  sin_senal: {
+    titulo: "No pudimos encontrar tu ubicación",
+    texto: "Revisá que el GPS o la ubicación del celular estén activados y volvé a intentar.",
+  },
+  tardo: {
+    titulo: "Tu ubicación está tardando demasiado",
+    texto: "Puede pasar con poca señal. Probá de nuevo en un lugar abierto o cerca de una ventana.",
+  },
+  no_disponible: {
+    titulo: "Tu navegador no permite obtener la ubicación",
+    texto: "Podés ver todos los centros igual, ordenados por nombre.",
+  },
+};
+
+function leerCache() {
+  try {
+    return JSON.parse(localStorage.getItem(CACHE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function Aviso({ color, titulo, children, accion, onAccion }) {
+  const colores = {
+    amber: "bg-amber-50 border-amber-200 text-amber-800",
+    red: "bg-red-50 border-red-200 text-red-800",
+  };
+  return (
+    <div role="alert" className={`border rounded-xl px-4 py-3 text-sm flex flex-wrap items-start gap-3 ${colores[color]}`}>
+      <div className="flex-1 min-w-[12rem]">
+        <p className="font-medium">{titulo}</p>
+        {children && <p className="mt-0.5 opacity-90">{children}</p>}
+      </div>
+      {accion && (
+        <button onClick={onAccion} className="shrink-0 text-sm font-medium underline underline-offset-2">
+          {accion}
+        </button>
+      )}
+    </div>
+  );
+}
 
 // Mueve el mapa cuando cambia el punto a mostrar.
 function Recentrar({ punto, zoom }) {
@@ -50,16 +101,50 @@ function Horario({ centro }) {
 
 export default function CentrosMapa() {
   const { estado, coords, pedir } = useUbicacion();
+  const online = useConexion();
   const [centros, setCentros] = useState([]);
+  // "cargando" | "ok" | "cache" (sin conexión, lista guardada) | "error"
+  const [carga, setCarga] = useState("cargando");
+  const [mapaSinTiles, setMapaSinTiles] = useState(false);
   const [tipo, setTipo] = useState("todos");
   const [visibles, setVisibles] = useState(POR_PAGINA);
   const [elegido, setElegido] = useState(null);
   const markers = useRef({});
   const mapaRef = useRef(null);
 
+  const cargarCentros = () => {
+    setCarga("cargando");
+    api
+      .getCentros()
+      .then((data) => {
+        setCentros(data);
+        setCarga("ok");
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        } catch {
+          // sin almacenamiento: la próxima vez sin conexión no habrá copia
+        }
+      })
+      .catch(() => {
+        // Sin conexión o servidor caído: si hay una copia de una visita
+        // anterior, se muestra con un aviso.
+        const guardados = leerCache();
+        if (guardados?.length) {
+          setCentros(guardados);
+          setCarga("cache");
+        } else {
+          setCarga("error");
+        }
+      });
+  };
+
+  useEffect(cargarCentros, []);
+
+  // Al volver la conexión, reintenta lo que no se pudo cargar.
   useEffect(() => {
-    api.getCentros().then(setCentros).catch(() => setCentros([]));
-  }, []);
+    if (online && (carga === "error" || carga === "cache")) cargarCentros();
+    if (online) setMapaSinTiles(false);
+  }, [online]);
 
   // Con ubicación: del más cercano al más lejano. Sin ella: por nombre.
   const lista = useMemo(() => {
@@ -94,6 +179,37 @@ export default function CentrosMapa() {
         </button>
       </div>
 
+      {!online && (
+        <Aviso color="red" titulo="Estás sin conexión a internet">
+          El mapa y la lista pueden no cargarse. Se actualizan solos cuando vuelva la conexión.
+        </Aviso>
+      )}
+      {online && carga === "error" && (
+        <Aviso color="red" titulo="No pudimos cargar los centros de salud" accion="Reintentar" onAccion={cargarCentros}>
+          Revisá tu conexión y volvé a intentar.
+        </Aviso>
+      )}
+      {carga === "cache" && (
+        <Aviso color="amber" titulo="Mostrando la última lista guardada">
+          No pudimos actualizarla. Los horarios pueden haber cambiado.
+        </Aviso>
+      )}
+      {online && mapaSinTiles && (
+        <Aviso color="amber" titulo="El mapa no terminó de cargar">
+          Los centros siguen en la lista de abajo. Probá recargar la página en un momento.
+        </Aviso>
+      )}
+      {MENSAJES_UBICACION[estado] && (
+        <Aviso
+          color="amber"
+          titulo={MENSAJES_UBICACION[estado].titulo}
+          accion={estado === "no_disponible" ? null : "Reintentar"}
+          onAccion={pedir}
+        >
+          {MENSAJES_UBICACION[estado].texto}
+        </Aviso>
+      )}
+
       {/* z-0 crea un contexto propio: sin esto las capas de Leaflet (z-index 400)
           quedan por encima del menú lateral en el celular. */}
       <div ref={mapaRef} className="relative z-0 h-[55vh] min-h-[320px] rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
@@ -101,6 +217,7 @@ export default function CentrosMapa() {
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            eventHandlers={{ tileerror: () => setMapaSinTiles(true) }}
           />
           <Recentrar punto={coords} zoom={14} />
           <Enfocar centro={elegido} markers={markers} />
@@ -192,6 +309,10 @@ export default function CentrosMapa() {
           <p className="text-xs text-gray-400">
             Activá tu ubicación para ordenarlos del más cercano al más lejano.
           </p>
+        )}
+
+        {carga === "cargando" && centros.length === 0 && (
+          <p className="text-sm text-gray-400">Cargando centros de salud...</p>
         )}
 
         <div className="space-y-2">
