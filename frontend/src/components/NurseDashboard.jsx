@@ -16,19 +16,52 @@ import PanelGeneral from "./PanelGeneral";
 import FichaPaciente from "./FichaPaciente";
 import SeccionGraficos from "./SeccionGraficos";
 
+// Cada ítem del menú agrupa una o más pantallas (views); las que van juntas
+// se muestran como pestañas (TABS). El ítem abre la primera.
 const NAV_ITEMS = [
-  { id: "panel", label: "Panel", icon: "📊" },
-  { id: "graficos", label: "Métricas", icon: "📈" },
-  { id: "register", label: "Registrar", icon: "➕" },
-  { id: "list", label: "Lista de usuarios", icon: "📋" },
-  { id: "bp", label: "Presión arterial", icon: "🩺" },
-  { id: "weight", label: "Peso", icon: <BasculaIcon /> },
-  { id: "symptoms", label: "Síntomas", icon: "🤒" },
-  { id: "messages", label: "Mensajes", icon: "💬" },
-  { id: "alerts", label: "Alertas", icon: "🚨" },
-  { id: "monitoring", label: "Monitoreo", icon: "📡" },
-  { id: "agenda", label: "Turnos", icon: "📅" },
+  { id: "panel", label: "Panel", icon: "📊", views: ["panel"] },
+  { id: "usuarios", label: "Usuarios", icon: "👥", views: ["list", "register"] },
+  { id: "controles", label: "Controles", icon: "🩺", views: ["bp", "weight", "symptoms"] },
+  { id: "alertas", label: "Alertas", icon: "🚨", views: ["alerts", "monitoring"] },
+  { id: "mensajes", label: "Mensajes", icon: "💬", views: ["messages"] },
+  { id: "turnos", label: "Turnos", icon: "📅", views: ["agenda"] },
+  { id: "metricas", label: "Métricas", icon: "📈", views: ["graficos"] },
 ];
+
+const TABS = {
+  controles: [
+    { id: "bp", label: "Presión arterial", icon: "🩺" },
+    { id: "weight", label: "Peso", icon: <BasculaIcon /> },
+    { id: "symptoms", label: "Síntomas", icon: "🤒" },
+  ],
+  alertas: [
+    { id: "alerts", label: "Alertas", icon: "🚨" },
+    { id: "monitoring", label: "Monitoreo", icon: "📡" },
+  ],
+};
+
+function Pestanas({ tabs, activa, onCambiar }) {
+  return (
+    <div role="tablist" className="flex flex-wrap gap-1 border-b border-gray-200 mb-6">
+      {tabs.map((t) => (
+        <button
+          key={t.id}
+          role="tab"
+          aria-selected={activa === t.id}
+          onClick={() => onCambiar(t.id)}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium -mb-px border-b-2 ${
+            activa === t.id
+              ? "border-purple-600 text-purple-700"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <span>{t.icon}</span>
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function NurseDashboard({ nurse, onLogout, showToast }) {
   const [activeView, setActiveView] = useState("panel");
@@ -94,9 +127,13 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
     setNurses(await api.getNurses());
   });
 
+  // Alertas y mensajes se cargan al entrar para mostrar en el menú cuántos
+  // faltan responder.
   useEffect(() => {
     loadPatients();
     loadNurses();
+    loadAlerts();
+    loadMessages();
   }, []);
 
   useEffect(() => {
@@ -141,10 +178,16 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
     }
   }, [activeView]);
 
-  const handleNavClick = (id) => {
-    setActiveView(id);
+  const handleNavClick = (view) => {
+    setActiveView(view);
     setFichaPatient(null);
     setSidebarOpen(false);
+  };
+
+  const grupoActivo = NAV_ITEMS.find((item) => item.views.includes(activeView));
+  const pendientes = {
+    alertas: alerts.filter((a) => !a.respuesta).length,
+    mensajes: messages.filter((m) => !m.respuesta).length,
   };
 
   return (
@@ -176,13 +219,21 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
-              onClick={() => handleNavClick(item.id)}
+              onClick={() => handleNavClick(item.views[0])}
               className={`sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 ${
-                activeView === item.id ? "active bg-purple-50 text-purple-700" : ""
+                grupoActivo?.id === item.id ? "active bg-purple-50 text-purple-700" : ""
               }`}
             >
               <span>{item.icon}</span>
               {item.label}
+              {pendientes[item.id] > 0 && (
+                <span
+                  className="ml-auto min-w-[1.5rem] px-1.5 py-0.5 rounded-full bg-red-500 text-white text-xs font-semibold text-center"
+                  aria-label={`${pendientes[item.id]} sin responder`}
+                >
+                  {pendientes[item.id]}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -210,6 +261,9 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
         </header>
 
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        {TABS[grupoActivo?.id] && (
+          <Pestanas tabs={TABS[grupoActivo.id]} activa={activeView} onCambiar={setActiveView} />
+        )}
         {activeView === "graficos" && (
           <SeccionGraficos
             patients={patients}
@@ -234,16 +288,36 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
             />
           ))}
         {activeView === "register" && (
-          <RegisterUserForm
-            nurses={nurses}
-            currentNurseId={nurse?.id}
-            onPatientCreated={(p) => setPatients((prev) => [...prev, p])}
-            onNurseCreated={(n) => setNurses((prev) => [...prev, n])}
-            showToast={showToast}
-          />
+          <div className="space-y-4">
+            <button onClick={() => setActiveView("list")} className="text-sm text-purple-600 hover:text-purple-800">
+              ← Volver a usuarios
+            </button>
+            <RegisterUserForm
+              nurses={nurses}
+              currentNurseId={nurse?.id}
+              onPatientCreated={(p) => {
+                setPatients((prev) => [...prev, p]);
+                setActiveView("list");
+              }}
+              onNurseCreated={(n) => {
+                setNurses((prev) => [...prev, n]);
+                setActiveView("list");
+              }}
+              showToast={showToast}
+            />
+          </div>
         )}
         {activeView === "list" && (
           <div className="space-y-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-2xl font-semibold text-gray-800">Usuarios</h2>
+              <button
+                onClick={() => setActiveView("register")}
+                className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
+              >
+                + Registrar
+              </button>
+            </div>
             <PatientListTable
               patients={patients}
               nurses={nurses}
