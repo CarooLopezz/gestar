@@ -12,8 +12,11 @@ import MonitoringPanel from "./MonitoringPanel";
 import NurseListTable from "./NurseListTable";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
 import Agenda from "./Agenda";
+import PanelGeneral from "./PanelGeneral";
+import FichaPaciente from "./FichaPaciente";
 
 const NAV_ITEMS = [
+  { id: "panel", label: "Panel", icon: "📊" },
   { id: "register", label: "Registrar", icon: "➕" },
   { id: "list", label: "Lista de usuarios", icon: "📋" },
   { id: "bp", label: "Presión arterial", icon: "🩺" },
@@ -26,7 +29,8 @@ const NAV_ITEMS = [
 ];
 
 export default function NurseDashboard({ nurse, onLogout, showToast }) {
-  const [activeView, setActiveView] = useState("register");
+  const [activeView, setActiveView] = useState("panel");
+  const [fichaPatient, setFichaPatient] = useState(null);
   const [patients, setPatients] = useState([]);
   const [bpRecords, setBpRecords] = useState([]);
   const [weightRecords, setWeightRecords] = useState([]);
@@ -120,10 +124,17 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
       loadPatients();
       loadAppointments();
     }
+    if (activeView === "panel") {
+      loadPatients();
+      loadAlerts();
+      loadMonitoring();
+      loadAppointments();
+    }
   }, [activeView]);
 
   const handleNavClick = (id) => {
     setActiveView(id);
+    setFichaPatient(null);
     setSidebarOpen(false);
   };
 
@@ -190,6 +201,20 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
         </header>
 
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        {activeView === "panel" &&
+          (fichaPatient ? (
+            <FichaPaciente patient={fichaPatient} onVolver={() => setFichaPatient(null)} showToast={showToast} />
+          ) : (
+            <PanelGeneral
+              patients={patients}
+              alerts={alerts}
+              monitoring={monitoring}
+              appointments={appointments}
+              currentNurseId={nurse?.id}
+              onVerFicha={setFichaPatient}
+              onIr={handleNavClick}
+            />
+          ))}
         {activeView === "register" && (
           <RegisterUserForm
             nurses={nurses}
