@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import { aDate, masNuevoPrimero } from "../utils/registros";
+import { aDate } from "../utils/registros";
 import GraficoBarras from "./GraficoBarras";
 import GraficoLinea from "./GraficoLinea";
-import GraficosPaciente from "./GraficosPaciente";
 
 const MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 const DIAS_ADHERENCIA = 7;
@@ -44,11 +43,9 @@ function formatHoras(horas) {
 
 const porcentaje = (parte, total) => (total ? `${Math.round((parte / total) * 100)}%` : "—");
 
-// Métricas del grupo de embarazadas por año y, eligiendo una, su presión y
-// su peso. Recibe todos los registros que ve la enfermera.
+// Métricas del grupo de embarazadas por año. Recibe todos los registros
+// que ve la enfermera.
 export default function SeccionGraficos({ patients, monitoring, bpRecords, weightRecords, symptomRecords }) {
-  const [elegidaId, setElegidaId] = useState("");
-
   // Todos los controles con su fecha ya convertida.
   const controles = useMemo(
     () =>
@@ -133,16 +130,6 @@ export default function SeccionGraficos({ patients, monitoring, bpRecords, weigh
       { etiqueta: "Sin fecha", valor: cuenta.sin, color: "#cbd5e1" },
     ];
   }, [monitoring]);
-
-  const elegida = patients.find((p) => String(p.id) === elegidaId);
-  const presionesElegida = useMemo(
-    () => (elegida ? masNuevoPrimero(bpRecords.filter((r) => r.patient_id === elegida.id)) : []),
-    [elegida, bpRecords]
-  );
-  const pesosElegida = useMemo(
-    () => (elegida ? masNuevoPrimero(weightRecords.filter((r) => r.patient_id === elegida.id)) : []),
-    [elegida, weightRecords]
-  );
 
   return (
     <div className="fade-in max-w-5xl space-y-6">
@@ -237,29 +224,6 @@ export default function SeccionGraficos({ patients, monitoring, bpRecords, weigh
           </table>
         </div>
       </Tarjeta>
-
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <h3 className="font-medium text-gray-700">Por embarazada</h3>
-          <select
-            value={elegidaId}
-            onChange={(e) => setElegidaId(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-          >
-            <option value="">Elegí una embarazada</option>
-            {patients.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nombre} {p.apellido}
-              </option>
-            ))}
-          </select>
-        </div>
-        {elegida ? (
-          <GraficosPaciente presiones={presionesElegida} pesos={pesosElegida} />
-        ) : (
-          <p className="text-sm text-gray-400">Elegí una embarazada para ver su presión y su peso.</p>
-        )}
-      </section>
     </div>
   );
 }
