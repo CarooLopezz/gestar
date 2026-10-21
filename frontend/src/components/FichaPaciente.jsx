@@ -1,36 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { formatFecha } from "../utils/fecha";
-import GraficoLinea from "./GraficoLinea";
-
-// Mismos límites que usa el backend para marcar alerta de presión (bp.py).
-const SISTOLICA_MAX = 120;
-const DIASTOLICA_MAX = 80;
-const MAX_PUNTOS = 15;
+import { aDate, diasDesde, masNuevoPrimero } from "../utils/registros";
+import GraficosPaciente from "./GraficosPaciente";
 
 const TRIMESTRE = { 1: "1.er trimestre", 2: "2.º trimestre", 3: "3.er trimestre" };
-
-// Los registros guardan la fecha como "dd/mm/aaaa".
-function aDate(fecha) {
-  const [d, m, a] = (fecha || "").split("/").map(Number);
-  return a ? new Date(a, m - 1, d) : null;
-}
-
-// Del más nuevo al más viejo según fecha y hora (no según el orden de carga).
-function masNuevoPrimero(registros) {
-  const clave = (r) => {
-    const f = aDate(r.fecha);
-    const [h, m] = (r.hora || "00:00").split(":").map(Number);
-    return f ? f.getTime() + (h * 60 + m) * 60000 : 0;
-  };
-  return [...registros].sort((a, b) => clave(b) - clave(a));
-}
-
-function diasDesde(fecha) {
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  return Math.round((hoy - fecha) / 86400000);
-}
 
 function Dato({ titulo, valor, detalle, alerta }) {
   return (
@@ -126,9 +100,6 @@ export default function FichaPaciente({ patient, onVolver, showToast }) {
   const diasSinControl = ultimoControl ? diasDesde(ultimoControl) : null;
   const faltan = agenda.estudios.filter((e) => e.estado === "pendiente" || e.estado === "atrasado");
 
-  // Para los gráficos: los últimos registros, del más viejo al más nuevo.
-  const presionesGrafico = presiones.slice(0, MAX_PUNTOS).reverse();
-  const pesosGrafico = pesos.slice(0, MAX_PUNTOS).reverse();
   const variacion = ultimoPeso && pesoAnterior ? ultimoPeso.peso - pesoAnterior.peso : null;
 
   return (
@@ -177,40 +148,7 @@ export default function FichaPaciente({ patient, onVolver, showToast }) {
         />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Seccion titulo="Presión arterial (mmHg)">
-          <GraficoLinea
-            etiquetas={presionesGrafico.map((r) => r.fecha.slice(0, 5))}
-            series={[
-              { nombre: "Sistólica", color: "#7c3aed", valores: presionesGrafico.map((r) => r.sistolica) },
-              { nombre: "Diastólica", color: "#db2777", valores: presionesGrafico.map((r) => r.diastolica) },
-            ]}
-            referencias={[
-              { valor: SISTOLICA_MAX, etiqueta: `límite ${SISTOLICA_MAX}` },
-              { valor: DIASTOLICA_MAX, etiqueta: `límite ${DIASTOLICA_MAX}` },
-            ]}
-          />
-          <div className="flex gap-4 text-xs text-gray-500 mt-2">
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-0.5 bg-violet-600" /> Sistólica
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-0.5 bg-pink-600" /> Diastólica
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 border-t border-dashed border-red-400" /> Límite de alerta
-            </span>
-          </div>
-        </Seccion>
-
-        <Seccion titulo="Peso (kg)">
-          <GraficoLinea
-            etiquetas={pesosGrafico.map((r) => r.fecha.slice(0, 5))}
-            series={[{ nombre: "Peso", color: "#0d9488", valores: pesosGrafico.map((r) => r.peso) }]}
-            unidad=" kg"
-          />
-        </Seccion>
-      </div>
+      <GraficosPaciente presiones={presiones} pesos={pesos} />
 
       <div className="grid lg:grid-cols-2 gap-6">
         <Seccion titulo="Estudios que le faltan">

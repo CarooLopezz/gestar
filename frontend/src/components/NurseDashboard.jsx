@@ -14,9 +14,11 @@ import ConfirmLogoutModal from "./ConfirmLogoutModal";
 import Agenda from "./Agenda";
 import PanelGeneral from "./PanelGeneral";
 import FichaPaciente from "./FichaPaciente";
+import SeccionGraficos from "./SeccionGraficos";
 
 const NAV_ITEMS = [
   { id: "panel", label: "Panel", icon: "📊" },
+  { id: "graficos", label: "Gráficos", icon: "📈" },
   { id: "register", label: "Registrar", icon: "➕" },
   { id: "list", label: "Lista de usuarios", icon: "📋" },
   { id: "bp", label: "Presión arterial", icon: "🩺" },
@@ -124,6 +126,13 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
       loadPatients();
       loadAppointments();
     }
+    if (activeView === "graficos") {
+      loadPatients();
+      loadMonitoring();
+      loadBPRecords();
+      loadWeightRecords();
+      loadSymptomRecords();
+    }
     if (activeView === "panel") {
       loadPatients();
       loadAlerts();
@@ -201,6 +210,15 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
         </header>
 
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        {activeView === "graficos" && (
+          <SeccionGraficos
+            patients={patients}
+            monitoring={monitoring}
+            bpRecords={bpRecords}
+            weightRecords={weightRecords}
+            symptomRecords={symptomRecords}
+          />
+        )}
         {activeView === "panel" &&
           (fichaPatient ? (
             <FichaPaciente patient={fichaPatient} onVolver={() => setFichaPatient(null)} showToast={showToast} />
