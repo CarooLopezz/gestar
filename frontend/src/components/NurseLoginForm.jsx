@@ -55,13 +55,19 @@ export default function NurseLoginForm({ onLogin, onBack, onGoToRegister }) {
           {submitting ? "Ingresando..." : "Ingresar"}
         </button>
 
-        <button
-          type="button"
-          onClick={onGoToRegister}
-          className="w-full text-purple-500 text-sm hover:text-purple-700"
-        >
-          ¿No tenés cuenta? Registrate
-        </button>
+        {onGoToRegister ? (
+          <button
+            type="button"
+            onClick={onGoToRegister}
+            className="w-full text-purple-500 text-sm hover:text-purple-700"
+          >
+            ¿No tenés cuenta? Registrate
+          </button>
+        ) : (
+          <p className="text-center text-gray-400 text-xs">
+            ¿No tenés cuenta? Pedile a un enfermero/a del equipo que te dé de alta.
+          </p>
+        )}
 
         <button
           type="button"

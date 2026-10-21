@@ -9,6 +9,8 @@ export default function NursePortal({ onBack, showToast }) {
   const [nurse, setNurse] = useState(null);
   const [authScreen, setAuthScreen] = useState("login");
   const [checkingSession, setCheckingSession] = useState(true);
+  // Solo se puede autorregistrar el primer enfermero (ver routes/nurses.py).
+  const [registroAbierto, setRegistroAbierto] = useState(false);
 
   useEffect(() => {
     api
@@ -16,6 +18,10 @@ export default function NursePortal({ onBack, showToast }) {
       .then(setNurse)
       .catch(() => {})
       .finally(() => setCheckingSession(false));
+    api
+      .getRegistroAbierto()
+      .then((r) => setRegistroAbierto(r.abierto))
+      .catch(() => setRegistroAbierto(false));
   }, []);
 
   const handleLogout = async () => {
@@ -37,7 +43,7 @@ export default function NursePortal({ onBack, showToast }) {
   }
 
   if (!nurse) {
-    if (authScreen === "register") {
+    if (authScreen === "register" && registroAbierto) {
       return (
         <NurseRegisterForm
           onRegistered={setNurse}
@@ -50,7 +56,7 @@ export default function NursePortal({ onBack, showToast }) {
       <NurseLoginForm
         onLogin={setNurse}
         onBack={onBack}
-        onGoToRegister={() => setAuthScreen("register")}
+        onGoToRegister={registroAbierto ? () => setAuthScreen("register") : null}
       />
     );
   }

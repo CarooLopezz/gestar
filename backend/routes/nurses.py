@@ -48,8 +48,26 @@ def validate_nurse_payload(data, nurse_id=None):
     return nombre, apellido, dni, email, errors
 
 
+# El autorregistro solo sirve para crear el primer enfermero de una instalación
+# nueva. Después, cualquiera que se registrara vería a todas las embarazadas:
+# los enfermeros nuevos los da de alta otro enfermero (POST /api/nurses, con
+# sesión) desde Usuarios.
+def registro_abierto():
+    return Nurse.query.first() is None
+
+
+@nurses_bp.route("/api/nurse/register", methods=["GET"])
+def estado_registro_nurse():
+    return jsonify({"abierto": registro_abierto()}), 200
+
+
 @nurses_bp.route("/api/nurse/register", methods=["POST"])
 def register_nurse():
+    if not registro_abierto():
+        return jsonify(
+            {"error": "El registro está cerrado. Pedile a un enfermero/a del equipo que te dé de alta."}
+        ), 403
+
     data = request.get_json(force=True, silent=True) or {}
     nombre, apellido, dni, email, errors = validate_nurse_payload(data)
 
