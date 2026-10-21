@@ -18,7 +18,7 @@ import SeccionGraficos from "./SeccionGraficos";
 
 const NAV_ITEMS = [
   { id: "panel", label: "Panel", icon: "📊" },
-  { id: "graficos", label: "Gráficos", icon: "📈" },
+  { id: "graficos", label: "Métricas", icon: "📈" },
   { id: "register", label: "Registrar", icon: "➕" },
   { id: "list", label: "Lista de usuarios", icon: "📋" },
   { id: "bp", label: "Presión arterial", icon: "🩺" },

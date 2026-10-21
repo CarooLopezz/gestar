@@ -27,7 +27,7 @@ export default function GraficoLinea({ series, etiquetas, referencias = [], unid
 
   const x = (i) => M.izq + (i * (W - M.izq - M.der)) / (n - 1);
   const y = (v) => M.arriba + ((yMax - v) * (H - M.arriba - M.abajo)) / (yMax - yMin);
-  const marcas = [yMin + margen, (yMin + yMax) / 2, yMax - margen].map((v) => Math.round(v));
+  const marcas = [...new Set([yMin + margen, (yMin + yMax) / 2, yMax - margen].map((v) => Math.round(v)))];
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={series.map((s) => s.nombre).join(" y ")}>
