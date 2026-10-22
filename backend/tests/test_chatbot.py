@@ -1,14 +1,18 @@
 """Pruebas de aceptación de la HU15 (asistente), lado backend.
 
 Correr desde backend/:  python -m unittest discover tests
-Usan una base SQLite temporal y un cliente falso de Claude: nunca llaman a la
-API de verdad ni generan costo.
+Usan una base SQLite temporal y clientes falsos de Claude y Gemini: nunca
+llaman a una IA de verdad ni generan costo.
 """
+import io
+import json
 import os
 import tempfile
 import unittest
+import urllib.error
 from datetime import datetime
 from types import SimpleNamespace as NS
+from unittest import mock
 
 _tmp = tempfile.mkdtemp()
 os.environ.setdefault("DATABASE_URL", f"sqlite:///{os.path.join(_tmp, 'test.db')}")
@@ -61,6 +65,15 @@ class ChatbotTest(unittest.TestCase):
         self.falso = ClienteFalso()
         chatbot._cliente = self.falso
         rutas_chatbot._consultas.clear()
+        # Sin claves reales: cada prueba decide qué modo usar.
+        entorno = mock.patch.dict(os.environ, {}, clear=False)
+        entorno.start()
+        self.addCleanup(entorno.stop)
+        os.environ.pop("ANTHROPIC_API_KEY", None)
+        os.environ.pop("GEMINI_API_KEY", None)
+
+    def sin_claude(self):
+        chatbot._cliente = None
 
     def conversar(self, mensajes, dni="40000001"):
         return self.client.post(URL, json={"dni": dni, "mensajes": mensajes})
@@ -69,7 +82,7 @@ class ChatbotTest(unittest.TestCase):
     def test_responde_a_la_usuaria(self):
         r = self.conversar([BIENVENIDA, {"rol": "usuaria", "texto": "Hola"}])
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.get_json(), {"respuesta": "Respuesta de prueba"})
+        self.assertEqual(r.get_json(), {"respuesta": "Respuesta de prueba", "modo": "claude"})
 
     def test_manda_la_conversacion_sin_la_bienvenida(self):
         self.conversar(
@@ -99,13 +112,73 @@ class ChatbotTest(unittest.TestCase):
         # El límite es por paciente: otra puede seguir consultando.
         self.assertEqual(self.conversar(mensajes, dni="40000002").status_code, 200)
 
-    def test_sin_clave_avisa_que_no_esta_disponible(self):
+    def test_sin_ninguna_clave_responde_el_modo_basico(self):
+        self.sin_claude()
+        r = self.conversar([{"rol": "usuaria", "texto": "¿Cuál es el horario de atención?"}])
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.get_json()["modo"], "basico")
+        self.assertIn("lunes a viernes de 8 a 20 h", r.get_json()["respuesta"])
+
+    def test_si_claude_falla_responde_el_modo_basico(self):
         chatbot._cliente = ClienteFalso(
             error=TypeError('"Could not resolve authentication method. Expected one of api_key..."')
         )
         r = self.conversar([{"rol": "usuaria", "texto": "hola"}])
-        self.assertEqual(r.status_code, 503)
-        self.assertIn("escribile a tu enfermera", r.get_json()["error"])
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.get_json()["modo"], "basico")
+
+    # Gemini (versión gratis)
+    def respuesta_gemini(self, texto):
+        datos = {"candidates": [{"content": {"parts": [{"text": texto}]}}]}
+        return mock.MagicMock(__enter__=lambda s: io.BytesIO(json.dumps(datos).encode()), __exit__=lambda *a: False)
+
+    def test_con_clave_de_gemini_responde_gemini(self):
+        self.sin_claude()
+        os.environ["GEMINI_API_KEY"] = "clave-de-prueba"
+        with mock.patch("urllib.request.urlopen", return_value=self.respuesta_gemini("Hola desde Gemini")) as abrir:
+            r = self.conversar([{"rol": "usuaria", "texto": "hola"}])
+        self.assertEqual(r.get_json(), {"respuesta": "Hola desde Gemini", "modo": "gemini"})
+        pedido = abrir.call_args[0][0]
+        self.assertEqual(pedido.get_header("X-goog-api-key"), "clave-de-prueba")
+        cuerpo = json.loads(pedido.data)
+        self.assertIn("lunes a viernes de 8 a 20 h", cuerpo["system_instruction"]["parts"][0]["text"])
+        self.assertEqual(cuerpo["contents"][-1], {"role": "user", "parts": [{"text": "hola"}]})
+
+    def test_si_se_acaba_el_cupo_de_gemini_responde_el_modo_basico(self):
+        self.sin_claude()
+        os.environ["GEMINI_API_KEY"] = "clave-de-prueba"
+        error = urllib.error.HTTPError("url", 429, "Too Many Requests", {}, None)
+        with mock.patch("urllib.request.urlopen", side_effect=error):
+            r = self.conversar([{"rol": "usuaria", "texto": "hola"}])
+        self.assertEqual(r.get_json()["modo"], "basico")
+
+    # Modo básico: ánimo, alarmas y consultas básicas
+    def basico(self, texto):
+        agenda = {
+            "fecha_parto": "2027-02-19",
+            "embarazo": {"semana": 22, "dias": 3, "trimestre": 2},
+            "estudios": [{"nombre": "Ecografía morfológica", "estado": "pendiente", "semana_desde": 20, "semana_hasta": 24}],
+            "turnos": [{"tipo": "Ecografía", "fecha": "2026-10-30", "hora": "10:30"}],
+        }
+        return chatbot.respuesta_basica(texto, "Ana", agenda, "Laura Ruiz")
+
+    def test_basico_responde_sobre_el_animo(self):
+        self.assertIn("Me alegra", self.basico("Me siento bien"))
+        self.assertIn("qué te pasa", self.basico("Me siento más o menos"))
+        self.assertIn("no estás sola", self.basico("Me siento triste o angustiada"))
+
+    def test_basico_ante_alarma_o_autolesion_manda_al_107(self):
+        self.assertIn("107", self.basico("Tengo sangrado"))
+        self.assertIn("107", self.basico("no siento al bebé moverse"))
+        self.assertIn("107", self.basico("a veces pienso en hacerme daño"))
+
+    def test_basico_consultas_con_datos_de_la_paciente(self):
+        self.assertIn("lunes a viernes de 8 a 20 h", self.basico("¿A qué hora atienden?"))
+        self.assertIn("Ecografía: 30/10/2026 a las 10:30", self.basico("¿Cuándo es mi próximo turno?"))
+        self.assertIn("Ecografía morfológica", self.basico("¿Qué estudios me tocan?"))
+        self.assertIn("semana 22", self.basico("¿En qué semana estoy?"))
+        self.assertIn("Laura Ruiz", self.basico("Quiero hablar con mi enfermera"))
+        self.assertIn("Mensajes", self.basico("¿qué es la placenta?"))
 
     def test_si_rechaza_deriva_a_enfermeria_y_al_107(self):
         chatbot._cliente = ClienteFalso(stop_reason="refusal")
