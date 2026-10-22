@@ -7,6 +7,7 @@ import RecordBloodPressure from "./RecordBloodPressure";
 import RecordWeight from "./RecordWeight";
 import PatientMessageForm from "./PatientMessageForm";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
+import ChatbotWidget from "./ChatbotWidget";
 import PatientAgenda from "./PatientAgenda";
 import CentrosMapa from "./CentrosMapa";
 
@@ -195,6 +196,8 @@ export default function PatientPortal({ onBack, showToast }) {
           )}
         </main>
       </div>
+
+      <ChatbotWidget patient={currentPatient} />
 
       <ConfirmLogoutModal
         open={showLogoutConfirm}
