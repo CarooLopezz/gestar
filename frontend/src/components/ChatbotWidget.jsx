@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
-import { cargarConversacion, conversacionInicial, guardarConversacion } from "../utils/chatbot";
+import { OPCIONES_ANIMO, cargarConversacion, conversacionInicial, guardarConversacion } from "../utils/chatbot";
 
-// Preguntas para empezar sin tener que escribir.
+// Preguntas sugeridas después de que responde sobre su ánimo.
 const SUGERENCIAS = [
   "¿Cuál es el horario de atención?",
   "¿Cuándo es mi próximo turno?",
   "¿Qué estudios me tocan ahora?",
   "¿Cómo cargo mi presión?",
 ];
+
+const CHIP =
+  "text-xs font-medium text-pink-700 bg-white border border-pink-200 hover:bg-pink-50 rounded-full px-3 py-1.5";
 
 // Asistente de la embarazada: botón flotante que abre una ventana de chat.
 // mensajes: [{ rol: "usuaria" | "asistente", texto }]
@@ -47,8 +50,8 @@ export default function ChatbotWidget({ patient }) {
     setError(null);
     setEsperando(true);
     try {
-      const { respuesta } = await api.conversarConAsistente(patient.dni, conversacion);
-      setMensajes((prev) => [...prev, { rol: "asistente", texto: respuesta }]);
+      const { respuesta, modo } = await api.conversarConAsistente(patient.dni, conversacion);
+      setMensajes((prev) => [...prev, { rol: "asistente", texto: respuesta, modo }]);
     } catch (err) {
       // El mensaje de la usuaria queda en la conversación; puede reintentar.
       setError(err.message || "No pudimos enviar tu mensaje. Revisá tu conexión.");
@@ -56,6 +59,8 @@ export default function ChatbotWidget({ patient }) {
       setEsperando(false);
     }
   };
+
+  const cantidadUsuaria = mensajes.filter((m) => m.rol === "usuaria").length;
 
   if (!abierto) {
     return (
@@ -98,7 +103,7 @@ export default function ChatbotWidget({ patient }) {
           <p className="text-center text-sm text-gray-400 mt-8">Escribí tu consulta para empezar.</p>
         )}
         {mensajes.map((m, i) => (
-          <div key={i} className={`flex ${m.rol === "usuaria" ? "justify-end" : "justify-start"}`}>
+          <div key={i} className={`flex flex-col ${m.rol === "usuaria" ? "items-end" : "items-start"}`}>
             <p
               className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm ${
                 m.rol === "usuaria"
@@ -108,19 +113,26 @@ export default function ChatbotWidget({ patient }) {
             >
               {m.texto}
             </p>
+            {m.modo === "basico" && (
+              <span className="text-[10px] text-gray-400 mt-0.5 ml-1">Respuesta automática, sin IA</span>
+            )}
           </div>
         ))}
-        {!mensajes.some((m) => m.rol === "usuaria") && !esperando && (
+        {!esperando && (
           <div className="flex flex-wrap gap-2 justify-end">
-            {SUGERENCIAS.map((s) => (
-              <button
-                key={s}
-                onClick={() => enviar(s)}
-                className="text-xs font-medium text-pink-700 bg-white border border-pink-200 hover:bg-pink-50 rounded-full px-3 py-1.5"
-              >
-                {s}
-              </button>
-            ))}
+            {/* Primero, cómo se siente; después de esa respuesta, preguntas sugeridas. */}
+            {cantidadUsuaria === 0 &&
+              OPCIONES_ANIMO.map((o) => (
+                <button key={o.texto} onClick={() => enviar(o.texto)} className={CHIP}>
+                  {o.etiqueta}
+                </button>
+              ))}
+            {cantidadUsuaria === 1 &&
+              SUGERENCIAS.map((s) => (
+                <button key={s} onClick={() => enviar(s)} className={CHIP}>
+                  {s}
+                </button>
+              ))}
           </div>
         )}
         {esperando && (

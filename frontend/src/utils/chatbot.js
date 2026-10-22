@@ -51,11 +51,27 @@ export function borrarConversacion(dni, storage = almacenamiento()) {
   }
 }
 
+export const PREGUNTA_ANIMO = "Antes de seguir: ¿cómo te sentís hoy?";
+
+// Respuestas rápidas a la pregunta sobre el ánimo: lo que se ve en el botón y
+// lo que se envía como mensaje.
+export const OPCIONES_ANIMO = [
+  { etiqueta: "😊 Bien", texto: "Me siento bien" },
+  { etiqueta: "😐 Más o menos", texto: "Me siento más o menos" },
+  { etiqueta: "😟 Mal", texto: "Me siento mal" },
+  { etiqueta: "😢 Triste o angustiada", texto: "Me siento triste o angustiada" },
+];
+
 // Conversación con la que arranca el chat: la guardada en esta sesión, o la
-// bienvenida si es la primera vez.
+// bienvenida y la pregunta sobre el ánimo si es la primera vez.
 export function conversacionInicial(dni, nombre, storage = almacenamiento(), fecha = new Date()) {
   const guardada = cargarConversacion(dni, storage);
-  return guardada?.length ? guardada : [{ rol: "asistente", texto: mensajeBienvenida(nombre, fecha) }];
+  return guardada?.length
+    ? guardada
+    : [
+        { rol: "asistente", texto: mensajeBienvenida(nombre, fecha) },
+        { rol: "asistente", texto: PREGUNTA_ANIMO },
+      ];
 }
 
 export function mensajeBienvenida(nombre, fecha = new Date()) {

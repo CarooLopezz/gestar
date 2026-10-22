@@ -1,4 +1,4 @@
-// Pruebas de GT-153 (bienvenida y horario) y GT-156 (bienvenida una vez por sesión).
+// Pruebas de GT-153 (bienvenida, horario y ánimo) y GT-156 (bienvenida una vez por sesión).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -7,6 +7,8 @@ import {
   estaEnHorario,
   guardarConversacion,
   mensajeBienvenida,
+  OPCIONES_ANIMO,
+  PREGUNTA_ANIMO,
 } from "./chatbot.js";
 
 // 2026-10-21 fue miércoles; 2026-10-24, sábado.
@@ -47,11 +49,17 @@ function storageFalso() {
   };
 }
 
-test("la primera vez en la sesión, la conversación arranca con la bienvenida", () => {
+test("la primera vez en la sesión, arranca con la bienvenida y pregunta cómo se siente", () => {
   const inicial = conversacionInicial("111", "Ana", storageFalso(), miercoles(10));
-  assert.equal(inicial.length, 1);
-  assert.equal(inicial[0].rol, "asistente");
+  assert.equal(inicial.length, 2);
+  assert.ok(inicial.every((m) => m.rol === "asistente"));
   assert.match(inicial[0].texto, /Hola, Ana/);
+  assert.equal(inicial[1].texto, PREGUNTA_ANIMO);
+});
+
+test("hay opciones para responder sobre el ánimo, incluida tristeza o angustia", () => {
+  assert.equal(OPCIONES_ANIMO.length, 4);
+  assert.ok(OPCIONES_ANIMO.some((o) => /triste/i.test(o.texto)));
 });
 
 test("en la misma sesión se retoma la conversación y no se repite la bienvenida", () => {

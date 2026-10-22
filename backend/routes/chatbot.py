@@ -61,12 +61,8 @@ def conversar():
             {"error": "Hiciste muchas consultas seguidas. Probá de nuevo en un rato o escribile a tu enfermera."}
         ), 429
 
-    try:
-        contexto = chatbot.contexto_paciente(
-            patient.nombre, agenda_de(patient), patient.to_dict()["enfermero_referencia"]
-        )
-        texto = chatbot.responder(mensajes, contexto)
-    except chatbot.AsistenteNoDisponible as e:
-        return jsonify({"error": f"{e} Probá más tarde o escribile a tu enfermera desde Mensajes."}), 503
-
-    return jsonify({"respuesta": texto}), 200
+    # Responde con IA si hay; si no (o si falla), con el modo básico.
+    texto, modo = chatbot.responder(
+        mensajes, patient.nombre, agenda_de(patient), patient.to_dict()["enfermero_referencia"]
+    )
+    return jsonify({"respuesta": texto, "modo": modo}), 200
