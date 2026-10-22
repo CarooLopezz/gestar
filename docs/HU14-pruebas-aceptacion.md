@@ -29,9 +29,9 @@ Correr antes de integrar:
 | GT-146 | Entrar a la pantalla por primera vez | El navegador pide permiso de ubicación |
 | GT-146 | Permitir la ubicación | El mapa se centra en la paciente y aparece el punto azul |
 | GT-147 | Mirar el mapa | Cada centro tiene su ícono y color según el tipo, y hay leyenda |
-| GT-147 | Tocar un marcador | Muestra nombre, tipo, dirección, horario y "Cómo llegar" |
-| GT-148 | Con ubicación permitida, mirar la lista | Muestra la distancia y el primero es el más cercano |
-| GT-148 | Tocar "Ver en el mapa" en un centro | El mapa va a ese centro y abre su cartel |
+| GT-147 | Tocar un ícono del mapa | Aparece una tarjeta con tipo, nombre, dirección, horario, teléfono y "Cómo llegar"; se cierra con ✕ |
+| GT-148 | Con ubicación permitida | Indica cuál es el centro más cercano y a qué distancia; "Ver" abre su tarjeta |
+| GT-148 | Elegir un tipo arriba del mapa (Hospital, Centro de salud...) | Quedan solo los centros de ese tipo |
 | GT-148 | Tocar "Cómo llegar" | Abre el recorrido en Google Maps |
 | GT-149 | Bloquear el permiso de ubicación | Aviso "No tenemos permiso..." con cómo activarlo y "Reintentar" |
 | GT-149 | Apagar el GPS del celular y reintentar | Aviso "No pudimos encontrar tu ubicación" |

@@ -1,5 +1,5 @@
 import "leaflet/dist/leaflet.css";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { api } from "../api/client";
 import useConexion from "../hooks/useConexion";
@@ -9,7 +9,6 @@ import { formatDistancia, ordenarCentros } from "../utils/distancia";
 
 // Centro del Gran Mendoza (Ciudad de Mendoza).
 const MENDOZA = [-32.8895, -68.8458];
-const POR_PAGINA = 8;
 const CACHE_KEY = "gestar.centros";
 
 // Qué decirle a la paciente según por qué no hay ubicación.
@@ -70,14 +69,12 @@ function Recentrar({ punto, zoom }) {
   return null;
 }
 
-// Lleva el mapa al centro elegido en la lista y abre su cartel.
-function Enfocar({ centro, markers }) {
+// Lleva el mapa al centro elegido.
+function Enfocar({ centro }) {
   const map = useMap();
   useEffect(() => {
-    if (!centro) return;
-    map.flyTo([centro.lat, centro.lng], 16, { duration: 0.6 });
-    markers.current[centro.id]?.openPopup();
-  }, [centro, map, markers]);
+    if (centro) map.flyTo([centro.lat, centro.lng], Math.max(map.getZoom(), 15), { duration: 0.6 });
+  }, [centro, map]);
   return null;
 }
 
@@ -100,6 +97,59 @@ function Horario({ centro }) {
   );
 }
 
+// Tarjeta con la información del centro tocado en el mapa.
+function TarjetaCentro({ centro, onCerrar }) {
+  const t = TIPOS_CENTRO[centro.tipo];
+  return (
+    <div className="absolute bottom-3 left-3 right-3 z-[1000] max-h-[70%] overflow-y-auto bg-white rounded-xl shadow-lg border border-gray-100 p-4 text-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${t?.chip}`}>
+            {t?.icono} {t?.nombre}
+          </span>
+          <p className="font-semibold text-gray-800 mt-1">{centro.nombre}</p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {centro.distancia !== null && (
+            <span className="text-sm font-medium text-gray-700">{formatDistancia(centro.distancia)}</span>
+          )}
+          <button
+            onClick={onCerrar}
+            aria-label="Cerrar"
+            className="w-7 h-7 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+      <div className="mt-2 space-y-0.5 text-gray-600">
+        <p>
+          📍 <Direccion centro={centro} />
+        </p>
+        <p>
+          <Horario centro={centro} />
+        </p>
+        {centro.telefono && (
+          <p>
+            📞{" "}
+            <a href={`tel:${centro.telefono.replace(/\s/g, "")}`} className="text-pink-600 hover:text-pink-800">
+              {centro.telefono}
+            </a>
+          </p>
+        )}
+      </div>
+      <a
+        href={linkComoLlegar(centro)}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-block mt-3 bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
+      >
+        Cómo llegar
+      </a>
+    </div>
+  );
+}
+
 export default function CentrosMapa() {
   const { estado, coords, pedir } = useUbicacion();
   const online = useConexion();
@@ -108,10 +158,7 @@ export default function CentrosMapa() {
   const [carga, setCarga] = useState("cargando");
   const [mapaSinTiles, setMapaSinTiles] = useState(false);
   const [tipo, setTipo] = useState("todos");
-  const [visibles, setVisibles] = useState(POR_PAGINA);
-  const [elegido, setElegido] = useState(null);
-  const markers = useRef({});
-  const mapaRef = useRef(null);
+  const [elegidoId, setElegidoId] = useState(null);
 
   const cargarCentros = () => {
     setCarga("cargando");
@@ -147,13 +194,10 @@ export default function CentrosMapa() {
     if (online) setMapaSinTiles(false);
   }, [online]);
 
-  // Con ubicación: del más cercano al más lejano. Sin ella: por nombre.
+  // Con ubicación: del más cercano al más lejano (y con su distancia).
   const lista = useMemo(() => ordenarCentros(centros, coords, tipo), [centros, tipo, coords]);
-
-  const elegir = (c) => {
-    setElegido(c);
-    mapaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  const elegido = lista.find((c) => c.id === elegidoId) || null;
+  const masCercano = coords ? lista[0] : null;
 
   return (
     <div className="fade-in w-full max-w-3xl space-y-4">
@@ -190,7 +234,7 @@ export default function CentrosMapa() {
       )}
       {online && mapaSinTiles && (
         <Aviso color="amber" titulo="El mapa no terminó de cargar">
-          Los centros siguen en la lista de abajo. Probá recargar la página en un momento.
+          Probá recargar la página en un momento.
         </Aviso>
       )}
       {MENSAJES_UBICACION[estado] && (
@@ -204,9 +248,48 @@ export default function CentrosMapa() {
         </Aviso>
       )}
 
+      <div className="flex flex-wrap gap-1.5">
+        {[["todos", "Todos"], ...Object.entries(TIPOS_CENTRO).map(([k, t]) => [k, t.nombre])].map(([k, label]) => (
+          <button
+            key={k}
+            onClick={() => {
+              setTipo(k);
+              setElegidoId(null);
+            }}
+            aria-pressed={tipo === k}
+            className={`text-xs font-medium px-3 py-1 rounded-full border ${
+              tipo === k
+                ? "bg-pink-600 border-pink-600 text-white"
+                : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {masCercano ? (
+        <p className="text-sm text-gray-600">
+          El más cercano: <span className="font-medium text-gray-800">{masCercano.nombre}</span>, a{" "}
+          {formatDistancia(masCercano.distancia)}.{" "}
+          <button
+            onClick={() => setElegidoId(masCercano.id)}
+            className="font-medium text-pink-600 hover:text-pink-800"
+          >
+            Ver
+          </button>
+        </p>
+      ) : (
+        <p className="text-sm text-gray-500">Tocá un ícono del mapa para ver la información del centro.</p>
+      )}
+
+      {carga === "cargando" && centros.length === 0 && (
+        <p className="text-sm text-gray-400">Cargando centros de salud...</p>
+      )}
+
       {/* z-0 crea un contexto propio: sin esto las capas de Leaflet (z-index 400)
           quedan por encima del menú lateral en el celular. */}
-      <div ref={mapaRef} className="relative z-0 h-[55vh] min-h-[320px] rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+      <div className="relative z-0 h-[65vh] min-h-[360px] rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
         <MapContainer center={MENDOZA} zoom={13} scrollWheelZoom className="h-full w-full">
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -214,32 +297,15 @@ export default function CentrosMapa() {
             eventHandlers={{ tileerror: () => setMapaSinTiles(true) }}
           />
           <Recentrar punto={coords} zoom={14} />
-          <Enfocar centro={elegido} markers={markers} />
+          <Enfocar centro={elegido} />
           {lista.map((c) => (
             <Marker
               key={c.id}
               position={[c.lat, c.lng]}
               icon={iconoCentro(c.tipo)}
-              ref={(m) => {
-                if (m) markers.current[c.id] = m;
-              }}
-            >
-              <Popup>
-                <div className="space-y-1 text-sm">
-                  <p className="font-semibold text-gray-800">{c.nombre}</p>
-                  <p className="text-gray-500">{TIPOS_CENTRO[c.tipo]?.nombre}</p>
-                  <p>
-                    <Direccion centro={c} />
-                  </p>
-                  <p>
-                    <Horario centro={c} />
-                  </p>
-                  <a href={linkComoLlegar(c)} target="_blank" rel="noreferrer">
-                    Cómo llegar
-                  </a>
-                </div>
-              </Popup>
-            </Marker>
+              title={c.nombre}
+              eventHandlers={{ click: () => setElegidoId(c.id) }}
+            />
           ))}
           {coords && (
             <CircleMarker
@@ -251,6 +317,7 @@ export default function CentrosMapa() {
             </CircleMarker>
           )}
         </MapContainer>
+        {elegido && <TarjetaCentro centro={elegido} onCerrar={() => setElegidoId(null)} />}
       </div>
 
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-600">
@@ -270,95 +337,6 @@ export default function CentrosMapa() {
           Tu ubicación
         </span>
       </div>
-
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-medium text-gray-700">
-            {coords ? "Más cercanos a vos" : "Todos los centros"}
-          </h3>
-          <div className="flex flex-wrap gap-1.5">
-            {[["todos", "Todos"], ...Object.entries(TIPOS_CENTRO).map(([k, t]) => [k, t.nombre])].map(
-              ([k, label]) => (
-                <button
-                  key={k}
-                  onClick={() => {
-                    setTipo(k);
-                    setVisibles(POR_PAGINA);
-                  }}
-                  aria-pressed={tipo === k}
-                  className={`text-xs font-medium px-3 py-1 rounded-full border ${
-                    tipo === k
-                      ? "bg-pink-600 border-pink-600 text-white"
-                      : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  {label}
-                </button>
-              )
-            )}
-          </div>
-        </div>
-
-        {!coords && (
-          <p className="text-xs text-gray-400">
-            Activá tu ubicación para ordenarlos del más cercano al más lejano.
-          </p>
-        )}
-
-        {carga === "cargando" && centros.length === 0 && (
-          <p className="text-sm text-gray-400">Cargando centros de salud...</p>
-        )}
-
-        <div className="space-y-2">
-          {lista.slice(0, visibles).map((c) => {
-            const t = TIPOS_CENTRO[c.tipo];
-            return (
-              <div key={c.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${t?.chip}`}>
-                      {t?.icono} {t?.nombre}
-                    </span>
-                    <p className="font-semibold text-gray-800 mt-1">{c.nombre}</p>
-                  </div>
-                  {c.distancia !== null && (
-                    <span className="shrink-0 text-sm font-medium text-gray-700">{formatDistancia(c.distancia)}</span>
-                  )}
-                </div>
-                <p className="text-gray-600 mt-1">
-                  <Direccion centro={c} />
-                </p>
-                <p className="text-gray-600">
-                  <Horario centro={c} />
-                </p>
-                {c.telefono && <p className="text-gray-600">📞 {c.telefono}</p>}
-                <div className="flex gap-4 mt-2">
-                  <button onClick={() => elegir(c)} className="text-xs font-medium text-pink-600 hover:text-pink-800">
-                    Ver en el mapa
-                  </button>
-                  <a
-                    href={linkComoLlegar(c)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs font-medium text-pink-600 hover:text-pink-800"
-                  >
-                    Cómo llegar
-                  </a>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {visibles < lista.length && (
-          <button
-            onClick={() => setVisibles((v) => v + POR_PAGINA)}
-            className="w-full text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg py-2 hover:bg-gray-50"
-          >
-            Ver más ({lista.length - visibles} restantes)
-          </button>
-        )}
-      </section>
     </div>
   );
 }
