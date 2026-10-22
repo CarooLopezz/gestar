@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
-import { mensajeBienvenida } from "../utils/chatbot";
+import { cargarConversacion, conversacionInicial, guardarConversacion } from "../utils/chatbot";
 
 // Preguntas para empezar sin tener que escribir.
 const SUGERENCIAS = [
@@ -14,7 +14,8 @@ const SUGERENCIAS = [
 // mensajes: [{ rol: "usuaria" | "asistente", texto }]
 export default function ChatbotWidget({ patient }) {
   const [abierto, setAbierto] = useState(false);
-  const [mensajes, setMensajes] = useState([]);
+  // Si ya hubo conversación en esta sesión, se retoma; si no, vacía hasta abrir.
+  const [mensajes, setMensajes] = useState(() => cargarConversacion(patient.dni) || []);
   const [borrador, setBorrador] = useState("");
   const [esperando, setEsperando] = useState(false);
   const [error, setError] = useState(null);
@@ -25,10 +26,16 @@ export default function ChatbotWidget({ patient }) {
     finRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajes, abierto, esperando]);
 
-  // Al abrir por primera vez, el asistente saluda con los horarios de atención.
+  // Cada cambio de la conversación queda guardado para esta sesión.
+  useEffect(() => {
+    if (mensajes.length) guardarConversacion(patient.dni, mensajes);
+  }, [mensajes, patient.dni]);
+
+  // La primera vez en la sesión, el asistente saluda con los horarios de
+  // atención; después se retoma la conversación guardada sin repetirlo.
   const abrir = () => {
     setAbierto(true);
-    setMensajes((prev) => (prev.length ? prev : [{ rol: "asistente", texto: mensajeBienvenida(patient.nombre) }]));
+    setMensajes((prev) => (prev.length ? prev : conversacionInicial(patient.dni, patient.nombre)));
   };
 
   const enviar = async (textoEnviado) => {

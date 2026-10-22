@@ -8,6 +8,7 @@ import RecordWeight from "./RecordWeight";
 import PatientMessageForm from "./PatientMessageForm";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
 import ChatbotWidget from "./ChatbotWidget";
+import { borrarConversacion } from "../utils/chatbot";
 import PatientAgenda from "./PatientAgenda";
 import CentrosMapa from "./CentrosMapa";
 
@@ -205,6 +206,8 @@ export default function PatientPortal({ onBack, showToast }) {
         onConfirm={() => {
           setShowLogoutConfirm(false);
           showToast("Sesión cerrada correctamente.");
+          // Una sesión nueva empieza con la bienvenida del asistente.
+          borrarConversacion(currentPatient.dni);
           setCurrentPatient(null);
         }}
       />
