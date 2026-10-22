@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { mensajeBienvenida } from "../utils/chatbot";
 
 // Asistente de la embarazada: botón flotante que abre una ventana de chat.
 // mensajes: [{ rol: "usuaria" | "asistente", texto }]
@@ -13,6 +14,12 @@ export default function ChatbotWidget({ patient }) {
     finRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajes, abierto]);
 
+  // Al abrir por primera vez, el asistente saluda con los horarios de atención.
+  const abrir = () => {
+    setAbierto(true);
+    setMensajes((prev) => (prev.length ? prev : [{ rol: "asistente", texto: mensajeBienvenida(patient.nombre) }]));
+  };
+
   const enviar = (e) => {
     e.preventDefault();
     const texto = borrador.trim();
@@ -24,7 +31,7 @@ export default function ChatbotWidget({ patient }) {
   if (!abierto) {
     return (
       <button
-        onClick={() => setAbierto(true)}
+        onClick={abrir}
         aria-label="Abrir el asistente"
         className="fixed bottom-5 right-5 z-40 flex items-center gap-2 bg-pink-600 hover:bg-pink-700 text-white font-medium pl-4 pr-5 py-3 rounded-full shadow-lg"
       >
