@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { api } from "../api/client";
 import { mensajeBienvenida } from "../utils/chatbot";
 
 // Asistente de la embarazada: botón flotante que abre una ventana de chat.
@@ -7,12 +8,14 @@ export default function ChatbotWidget({ patient }) {
   const [abierto, setAbierto] = useState(false);
   const [mensajes, setMensajes] = useState([]);
   const [borrador, setBorrador] = useState("");
+  const [esperando, setEsperando] = useState(false);
+  const [error, setError] = useState(null);
   const finRef = useRef(null);
 
   // Baja hasta el último mensaje cada vez que llega uno nuevo.
   useEffect(() => {
     finRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mensajes, abierto]);
+  }, [mensajes, abierto, esperando]);
 
   // Al abrir por primera vez, el asistente saluda con los horarios de atención.
   const abrir = () => {
@@ -20,12 +23,24 @@ export default function ChatbotWidget({ patient }) {
     setMensajes((prev) => (prev.length ? prev : [{ rol: "asistente", texto: mensajeBienvenida(patient.nombre) }]));
   };
 
-  const enviar = (e) => {
+  const enviar = async (e) => {
     e.preventDefault();
     const texto = borrador.trim();
-    if (!texto) return;
-    setMensajes((prev) => [...prev, { rol: "usuaria", texto }]);
+    if (!texto || esperando) return;
+    const conversacion = [...mensajes, { rol: "usuaria", texto }];
+    setMensajes(conversacion);
     setBorrador("");
+    setError(null);
+    setEsperando(true);
+    try {
+      const { respuesta } = await api.conversarConAsistente(patient.dni, conversacion);
+      setMensajes((prev) => [...prev, { rol: "asistente", texto: respuesta }]);
+    } catch (err) {
+      // El mensaje de la usuaria queda en la conversación; puede reintentar.
+      setError(err.message || "No pudimos enviar tu mensaje. Revisá tu conexión.");
+    } finally {
+      setEsperando(false);
+    }
   };
 
   if (!abierto) {
@@ -81,6 +96,18 @@ export default function ChatbotWidget({ patient }) {
             </p>
           </div>
         ))}
+        {esperando && (
+          <div className="flex justify-start" aria-live="polite">
+            <p className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm shadow-sm px-3.5 py-2 text-sm text-gray-400">
+              Escribiendo...
+            </p>
+          </div>
+        )}
+        {error && (
+          <p role="alert" className="text-center text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
+            {error}
+          </p>
+        )}
         <div ref={finRef} />
       </div>
 
@@ -98,7 +125,7 @@ export default function ChatbotWidget({ patient }) {
         />
         <button
           type="submit"
-          disabled={!borrador.trim()}
+          disabled={!borrador.trim() || esperando}
           className="bg-pink-600 hover:bg-pink-700 disabled:opacity-50 text-white text-sm font-medium px-4 rounded-full"
         >
           Enviar

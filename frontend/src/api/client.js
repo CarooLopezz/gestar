@@ -115,4 +115,7 @@ export const api = {
     request(`/agenda/patient/${encodeURIComponent(dni)}/estudios/${key}`, { method: "DELETE" }),
 
   getCentros: () => request("/centros"),
+
+  conversarConAsistente: (dni, mensajes) =>
+    request("/chatbot/patient", { method: "POST", body: JSON.stringify({ dni, mensajes }) }),
 };
