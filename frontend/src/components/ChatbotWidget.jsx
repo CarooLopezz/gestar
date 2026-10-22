@@ -2,6 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
 import { mensajeBienvenida } from "../utils/chatbot";
 
+// Preguntas para empezar sin tener que escribir.
+const SUGERENCIAS = [
+  "¿Cuál es el horario de atención?",
+  "¿Cuándo es mi próximo turno?",
+  "¿Qué estudios me tocan ahora?",
+  "¿Cómo cargo mi presión?",
+];
+
 // Asistente de la embarazada: botón flotante que abre una ventana de chat.
 // mensajes: [{ rol: "usuaria" | "asistente", texto }]
 export default function ChatbotWidget({ patient }) {
@@ -23,9 +31,8 @@ export default function ChatbotWidget({ patient }) {
     setMensajes((prev) => (prev.length ? prev : [{ rol: "asistente", texto: mensajeBienvenida(patient.nombre) }]));
   };
 
-  const enviar = async (e) => {
-    e.preventDefault();
-    const texto = borrador.trim();
+  const enviar = async (textoEnviado) => {
+    const texto = textoEnviado.trim();
     if (!texto || esperando) return;
     const conversacion = [...mensajes, { rol: "usuaria", texto }];
     setMensajes(conversacion);
@@ -96,6 +103,19 @@ export default function ChatbotWidget({ patient }) {
             </p>
           </div>
         ))}
+        {!mensajes.some((m) => m.rol === "usuaria") && !esperando && (
+          <div className="flex flex-wrap gap-2 justify-end">
+            {SUGERENCIAS.map((s) => (
+              <button
+                key={s}
+                onClick={() => enviar(s)}
+                className="text-xs font-medium text-pink-700 bg-white border border-pink-200 hover:bg-pink-50 rounded-full px-3 py-1.5"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
         {esperando && (
           <div className="flex justify-start" aria-live="polite">
             <p className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm shadow-sm px-3.5 py-2 text-sm text-gray-400">
@@ -111,7 +131,13 @@ export default function ChatbotWidget({ patient }) {
         <div ref={finRef} />
       </div>
 
-      <form onSubmit={enviar} className="border-t border-gray-100 p-3 flex gap-2 bg-white">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          enviar(borrador);
+        }}
+        className="border-t border-gray-100 p-3 flex gap-2 bg-white"
+      >
         <label htmlFor="chatbot-mensaje" className="sr-only">
           Tu mensaje
         </label>

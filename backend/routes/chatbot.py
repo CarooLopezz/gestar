@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, request
 
 import chatbot
 from models import Patient
+from routes.pregnancy import agenda_de
 
 chatbot_bp = Blueprint("chatbot", __name__)
 
@@ -61,7 +62,10 @@ def conversar():
         ), 429
 
     try:
-        texto = chatbot.responder(mensajes)
+        contexto = chatbot.contexto_paciente(
+            patient.nombre, agenda_de(patient), patient.to_dict()["enfermero_referencia"]
+        )
+        texto = chatbot.responder(mensajes, contexto)
     except chatbot.AsistenteNoDisponible as e:
         return jsonify({"error": f"{e} Probá más tarde o escribile a tu enfermera desde Mensajes."}), 503
 
