@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import PatientDetailModal from "./PatientDetailModal";
 import { formatFecha } from "../utils/fecha";
 import MisPacientesToggle from "./MisPacientesToggle";
+import { coincideBusqueda } from "../utils/busqueda";
 
 function ActionIcons({ patient, isBusy, confirming, onDetail, onEdit, onAskDelete, onConfirmDelete, onCancelDelete }) {
   if (confirming) {
@@ -70,12 +71,8 @@ export default function PatientListTable({
   const [detailPatient, setDetailPatient] = useState(null);
 
   const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
     return patients.filter(
-      (p) =>
-        (!soloMias || p.nurse_id === currentNurseId) &&
-        (!term ||
-          [p.nombre, p.apellido, p.dni, p.email].some((field) => (field || "").toLowerCase().includes(term)))
+      (p) => (!soloMias || p.nurse_id === currentNurseId) && coincideBusqueda(p, search)
     );
   }, [patients, search, soloMias, currentNurseId]);
 

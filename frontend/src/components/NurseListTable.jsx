@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { api } from "../api/client";
+import { coincideBusqueda } from "../utils/busqueda";
 
 function ActionIcons({ isBusy, confirming, onEdit, onAskDelete, onConfirmDelete, onCancelDelete }) {
   if (confirming) {
@@ -50,13 +51,7 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
   const [busyId, setBusyId] = useState(null);
 
   const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return nurses;
-    return nurses.filter((n) =>
-      [n.nombre, n.apellido, n.dni, n.email].some((field) =>
-        (field || "").toLowerCase().includes(term)
-      )
-    );
+    return nurses.filter((n) => coincideBusqueda(n, search));
   }, [nurses, search]);
 
   const startEdit = (n) => {
