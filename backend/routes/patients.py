@@ -76,6 +76,10 @@ def validate_patient_payload(data, patient_id=None, current_fecha_parto=None):
         errors["email"] = "Campo obligatorio"
     elif "@" not in email or "." not in email.split("@")[-1]:
         errors["email"] = "Formato de email inválido"
+    else:
+        existing = Patient.query.filter_by(email=email).first()
+        if existing and existing.id != patient_id:
+            errors["email"] = "Email ya registrado"
 
     return nombre, apellido, dni, email, fecha_parto, nurse_id, errors
 
