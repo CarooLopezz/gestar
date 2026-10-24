@@ -2,6 +2,7 @@
 GESTAR+ - Backend API
 Flask + SQLAlchemy (Postgres en producción, SQLite en desarrollo local)
 """
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -13,6 +14,9 @@ from routes import register_routes
 from routes.health_centers import cargar_centros_iniciales
 
 load_dotenv()
+
+# Sin esto solo se ven los errores en los logs (en Render también los avisos de mails enviados).
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
 # Render (y otros PaaS) inyectan la URL de Postgres en DATABASE_URL. Sin esa
 # variable (desarrollo local) usamos un archivo SQLite, así no hace falta
