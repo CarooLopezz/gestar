@@ -8,6 +8,7 @@ import RecordWeight from "./RecordWeight";
 import PatientMessageForm from "./PatientMessageForm";
 import ConfirmLogoutModal from "./ConfirmLogoutModal";
 import ChatbotWidget from "./ChatbotWidget";
+import CambiarContrasenaModal from "./CambiarContrasenaModal";
 import { borrarConversacion } from "../utils/chatbot";
 import PatientAgenda from "./PatientAgenda";
 import CentrosMapa from "./CentrosMapa";
@@ -25,6 +26,7 @@ export default function PatientPortal({ onBack, showToast }) {
   const [currentPatient, setCurrentPatient] = useState(null);
   const [activeView, setActiveView] = useState("agenda");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [cambiandoContrasena, setCambiandoContrasena] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [recordatorio, setRecordatorio] = useState({ hora_recordatorio: "", ya_registro_hoy: true });
   const [monitoreo, setMonitoreo] = useState({ necesita_control: false, dias_sin_control: null });
@@ -134,7 +136,13 @@ export default function PatientPortal({ onBack, showToast }) {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-gray-100">
+        <div className="p-3 border-t border-gray-100 space-y-1">
+          <button
+            onClick={() => setCambiandoContrasena(true)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50"
+          >
+            🔑 Cambiar contraseña
+          </button>
           <button
             onClick={() => setShowLogoutConfirm(true)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50"
@@ -199,6 +207,16 @@ export default function PatientPortal({ onBack, showToast }) {
       </div>
 
       <ChatbotWidget patient={currentPatient} />
+
+      {cambiandoContrasena && (
+        <CambiarContrasenaModal
+          tipo="paciente"
+          email={currentPatient.email}
+          onCerrar={() => setCambiandoContrasena(false)}
+          showToast={showToast}
+          anillo="focus:ring-pink-300"
+        />
+      )}
 
       <ConfirmLogoutModal
         open={showLogoutConfirm}

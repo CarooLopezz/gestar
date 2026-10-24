@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api } from "../api/client";
 import PasswordInput from "./PasswordInput";
+import RecuperarContrasena from "./RecuperarContrasena";
 
 export default function NurseLoginForm({ onLogin, onBack, onGoToRegister }) {
   const [email, setEmail] = useState("");
@@ -40,9 +41,11 @@ export default function NurseLoginForm({ onLogin, onBack, onGoToRegister }) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">Contraseña (tu DNI)</label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Contraseña</label>
           <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} />
-          <p className="text-gray-400 text-xs mt-1">Usá el DNI con el que te registraste.</p>
+          <p className="text-gray-400 text-xs mt-1">
+            Te llegó por mail cuando te registraron. Si tu cuenta es anterior, usá tu DNI.
+          </p>
         </div>
 
         {error && <p className="text-red-500 text-xs">{error}</p>}
@@ -62,6 +65,8 @@ export default function NurseLoginForm({ onLogin, onBack, onGoToRegister }) {
         >
           ¿No tenés cuenta? Registrate
         </button>
+
+        <RecuperarContrasena tipo="enfermero" emailInicial={email} />
 
         <button
           type="button"

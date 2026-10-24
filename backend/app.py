@@ -59,7 +59,12 @@ def add_missing_columns():
         "descartada_por_id": "INTEGER REFERENCES nurses(id)",
     }
     nuevas = {
-        "patients": {"fecha_parto": "DATE", "nurse_id": "INTEGER REFERENCES nurses(id)"},
+        "patients": {
+            "fecha_parto": "DATE",
+            "nurse_id": "INTEGER REFERENCES nurses(id)",
+            "password_hash": "VARCHAR(255)",
+        },
+        "nurses": {"password_hash": "VARCHAR(255)"},
         "bp_records": alerta_auditada,
         "weight_records": alerta_auditada,
         "symptom_records": alerta_auditada,

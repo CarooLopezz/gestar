@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { api } from "../api/client";
+import CredencialesCreadas from "./CredencialesCreadas";
 import { coincideBusqueda } from "../utils/busqueda";
 
-function ActionIcons({ isBusy, confirming, onEdit, onAskDelete, onConfirmDelete, onCancelDelete }) {
+function ActionIcons({ isBusy, confirming, onEdit, onAskDelete, onConfirmDelete, onCancelDelete, onNuevaContrasena }) {
   if (confirming) {
     return (
       <div className="flex items-center gap-2">
@@ -31,6 +32,14 @@ function ActionIcons({ isBusy, confirming, onEdit, onAskDelete, onConfirmDelete,
         ✏️
       </button>
       <button
+        onClick={onNuevaContrasena}
+        title="Generar una contraseña nueva"
+        aria-label="Generar una contraseña nueva"
+        className="w-7 h-7 flex items-center justify-center rounded-full text-amber-600 hover:bg-amber-50"
+      >
+        🔑
+      </button>
+      <button
         onClick={onAskDelete}
         title="Eliminar"
         aria-label="Eliminar"
@@ -49,6 +58,7 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
   const [editErrors, setEditErrors] = useState({});
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [nuevaCredencial, setNuevaCredencial] = useState(null);
 
   const filtered = useMemo(() => {
     return nurses.filter((n) => coincideBusqueda(n, search));
@@ -78,6 +88,19 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
       } else {
         showToast(err.message || "No se pudo actualizar", false);
       }
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // Contraseña nueva (si no le llegó el mail o es una cuenta vieja que entraba con el DNI).
+  const generarContrasena = async (u) => {
+    if (!window.confirm(`¿Generar una contraseña nueva para ${u.nombre} ${u.apellido}? La anterior deja de funcionar.`)) return;
+    setBusyId(u.id);
+    try {
+      setNuevaCredencial(await api.nuevaContrasena("nurses", u.id));
+    } catch (err) {
+      showToast(err.message || "No se pudo generar la contraseña", false);
     } finally {
       setBusyId(null);
     }
@@ -205,6 +228,7 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
                             confirming={confirmDeleteId === n.id}
                             onEdit={() => startEdit(n)}
                             onAskDelete={() => setConfirmDeleteId(n.id)}
+                            onNuevaContrasena={() => generarContrasena(n)}
                             onConfirmDelete={() => confirmDelete(n.id)}
                             onCancelDelete={() => setConfirmDeleteId(null)}
                           />
@@ -261,6 +285,7 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
                       confirming={confirmDeleteId === n.id}
                       onEdit={() => startEdit(n)}
                       onAskDelete={() => setConfirmDeleteId(n.id)}
+                      onNuevaContrasena={() => generarContrasena(n)}
                       onConfirmDelete={() => confirmDelete(n.id)}
                       onCancelDelete={() => setConfirmDeleteId(null)}
                     />
@@ -281,6 +306,25 @@ export default function NurseListTable({ nurses, currentNurseId, onNurseUpdated,
           </p>
         )}
       </div>
+      {nuevaCredencial && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setNuevaCredencial(null)}>
+          <div className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <CredencialesCreadas
+              nombre={`${nuevaCredencial.nombre} ${nuevaCredencial.apellido}`}
+              email={nuevaCredencial.email}
+              contrasena={nuevaCredencial.contrasena_provisoria}
+              mailEnviado={nuevaCredencial.mail_enviado}
+            >
+              <button
+                onClick={() => setNuevaCredencial(null)}
+                className="text-sm font-medium text-green-800 hover:underline"
+              >
+                Cerrar
+              </button>
+            </CredencialesCreadas>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

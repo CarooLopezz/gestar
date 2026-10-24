@@ -48,6 +48,12 @@ export const api = {
   createOwnBPRecord: (payload) =>
     request("/bp/patient", { method: "POST", body: JSON.stringify(payload) }),
 
+  recuperarContrasena: (tipo, email) =>
+    request("/recuperar-contrasena", { method: "POST", body: JSON.stringify({ tipo, email }) }),
+  // tabla: "patients" | "nurses"
+  nuevaContrasena: (tabla, id) => request(`/${tabla}/${id}/nueva-contrasena`, { method: "POST" }),
+  cambiarContrasena: (payload) =>
+    request("/cambiar-contrasena", { method: "POST", body: JSON.stringify(payload) }),
   registerNurse: (payload) =>
     request("/nurse/register", { method: "POST", body: JSON.stringify(payload) }),
   loginNurse: (payload) =>

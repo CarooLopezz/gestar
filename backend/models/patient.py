@@ -12,6 +12,8 @@ class Patient(db.Model):
     estado = db.Column(db.String(20), nullable=False, default="Activo")
     hora_recordatorio = db.Column(db.String(5), nullable=True)
     fecha_parto = db.Column(db.Date, nullable=True)
+    # Cifrada (werkzeug). Vacía en cuentas viejas: entran con el DNI.
+    password_hash = db.Column(db.String(255), nullable=True)
     # Enfermero/a de referencia (1:N: un enfermero tiene muchas embarazadas).
     # Es organizativo: todo el equipo sigue viendo a todas las pacientes.
     nurse_id = db.Column(db.Integer, db.ForeignKey("nurses.id"), nullable=True)

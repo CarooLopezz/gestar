@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "../api/client";
+import CredencialesCreadas from "./CredencialesCreadas";
 
 const emptyForm = { nombre: "", apellido: "", dni: "", email: "", fecha_parto: "", nurse_id: "" };
 
@@ -10,6 +11,8 @@ export default function RegisterUserForm({ nurses = [], currentNurseId, onPatien
   const [form, setForm] = useState(nuevoForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  // La cuenta recién creada, para mostrar su contraseña.
+  const [creada, setCreada] = useState(null);
 
   const handleChange = (field) => (e) => {
     setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -36,6 +39,7 @@ export default function RegisterUserForm({ nurses = [], currentNurseId, onPatien
           nurse_id: form.nurse_id ? Number(form.nurse_id) : null,
         });
         onPatientCreated(patient);
+        setCreada(patient);
         showToast("Embarazada registrada correctamente");
       } else {
         const nurse = await api.createNurse({
@@ -45,6 +49,7 @@ export default function RegisterUserForm({ nurses = [], currentNurseId, onPatien
           email: form.email,
         });
         onNurseCreated(nurse);
+        setCreada(nurse);
         showToast("Enfermero/a registrado correctamente");
       }
       setForm(nuevoForm());
@@ -62,6 +67,20 @@ export default function RegisterUserForm({ nurses = [], currentNurseId, onPatien
   return (
     <div className="fade-in max-w-lg">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Registrar</h2>
+      {creada && (
+        <div className="mb-4">
+          <CredencialesCreadas
+            nombre={`${creada.nombre} ${creada.apellido}`}
+            email={creada.email}
+            contrasena={creada.contrasena_provisoria}
+            mailEnviado={creada.mail_enviado}
+          >
+            <button onClick={() => setCreada(null)} className="text-sm font-medium text-green-800 hover:underline">
+              Listo, registrar a otra persona
+            </button>
+          </CredencialesCreadas>
+        </div>
+      )}
       <form onSubmit={handleSubmit} noValidate className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
         <Field label="Nombre" error={errors.nombre}>
           <input
@@ -88,9 +107,6 @@ export default function RegisterUserForm({ nurses = [], currentNurseId, onPatien
             onChange={handleChange("dni")}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
           />
-          <p className="text-gray-400 text-xs mt-1">
-            No hay un campo de contraseña aparte: va a usar este DNI para ingresar.
-          </p>
         </Field>
 
         <Field label="Email" error={errors.email}>
