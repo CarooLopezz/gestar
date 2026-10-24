@@ -2,7 +2,9 @@ from flask import Blueprint, jsonify, request, session
 
 from auth import nurse_required
 from extensions import db
+import credenciales
 from models import BPRecord, Message, Nurse, Patient, SymptomRecord, WeightRecord
+from routes.cuentas import avisar_alta, preparar_alta
 
 
 def tiene_actividad(nurse_id):
@@ -57,21 +59,22 @@ def register_nurse():
         return jsonify({"errors": errors}), 400
 
     nurse = Nurse(nombre=nombre, apellido=apellido, dni=dni, email=email)
+    contrasena = preparar_alta(nurse)
     db.session.add(nurse)
     db.session.commit()
 
     session["nurse_id"] = nurse.id
-    return jsonify(nurse.to_dict()), 201
+    return jsonify({**nurse.to_dict(), **avisar_alta(nurse, contrasena)}), 201
 
 
 @nurses_bp.route("/api/nurse/login", methods=["POST"])
 def login_nurse():
     data = request.get_json(force=True, silent=True) or {}
     email = (data.get("email") or "").strip()
-    password = (data.get("password") or "").strip()  # la "contraseña" es el DNI
+    password = (data.get("password") or "").strip()
 
-    nurse = Nurse.query.filter_by(email=email, dni=password).first()
-    if nurse is None:
+    nurse = Nurse.query.filter_by(email=email).first()
+    if not credenciales.verificar(nurse, password):
         return jsonify({"error": "Email o contraseña incorrectos."}), 401
 
     session["nurse_id"] = nurse.id
@@ -115,12 +118,13 @@ def create_nurse():
         return jsonify({"errors": errors}), 400
 
     nurse = Nurse(nombre=nombre, apellido=apellido, dni=dni, email=email)
+    contrasena = preparar_alta(nurse)
     db.session.add(nurse)
     db.session.commit()
 
     # Lo crea un enfermero ya logueado: a diferencia de /api/nurse/register,
     # no se toca la sesión (no hay que reemplazar la sesión activa por la del nuevo usuario).
-    return jsonify(nurse.to_dict()), 201
+    return jsonify({**nurse.to_dict(), **avisar_alta(nurse, contrasena)}), 201
 
 
 @nurses_bp.route("/api/nurses/<int:nurse_id>", methods=["PUT"])

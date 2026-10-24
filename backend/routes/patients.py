@@ -6,6 +6,7 @@ from flask import Blueprint, jsonify, request
 from auth import nurse_required
 from extensions import db
 from models import BPRecord, Nurse, Patient, SymptomRecord
+from routes.cuentas import avisar_alta, preparar_alta
 
 patients_bp = Blueprint("patients", __name__)
 
@@ -104,9 +105,10 @@ def create_patient():
         nurse_id=nurse_id,
         estado="Activo",
     )
+    contrasena = preparar_alta(patient)
     db.session.add(patient)
     db.session.commit()
-    return jsonify(patient.to_dict()), 201
+    return jsonify({**patient.to_dict(), **avisar_alta(patient, contrasena)}), 201
 
 
 @patients_bp.route("/api/patients/<int:patient_id>", methods=["PUT"])

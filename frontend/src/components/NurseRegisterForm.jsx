@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "../api/client";
+import CredencialesCreadas from "./CredencialesCreadas";
 
 const emptyForm = { nombre: "", apellido: "", dni: "", email: "" };
 
@@ -7,6 +8,7 @@ export default function NurseRegisterForm({ onRegistered, onBack, onGoToLogin })
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [creada, setCreada] = useState(null);
 
   const handleChange = (field) => (e) => {
     setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -17,8 +19,8 @@ export default function NurseRegisterForm({ onRegistered, onBack, onGoToLogin })
     setErrors({});
     setSubmitting(true);
     try {
-      const nurse = await api.registerNurse(form);
-      onRegistered(nurse);
+      // Primero se muestra la contraseña; entra cuando confirma que la anotó.
+      setCreada(await api.registerNurse(form));
     } catch (err) {
       if (err.data?.errors) {
         setErrors(err.data.errors);
@@ -29,6 +31,28 @@ export default function NurseRegisterForm({ onRegistered, onBack, onGoToLogin })
       setSubmitting(false);
     }
   };
+
+  if (creada) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-purple-50 to-pink-50 px-4">
+        <div className="w-full max-w-sm">
+          <CredencialesCreadas
+            nombre={`${creada.nombre} ${creada.apellido}`}
+            email={creada.email}
+            contrasena={creada.contrasena_provisoria}
+            mailEnviado={creada.mail_enviado}
+          >
+            <button
+              onClick={() => onRegistered(creada)}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 rounded-lg"
+            >
+              Ya la anoté, entrar
+            </button>
+          </CredencialesCreadas>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-purple-50 to-pink-50 px-4">
@@ -63,9 +87,6 @@ export default function NurseRegisterForm({ onRegistered, onBack, onGoToLogin })
             onChange={handleChange("dni")}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
           />
-          <p className="text-gray-400 text-xs mt-1">
-            No hay un campo de contraseña aparte: vas a usar este DNI para ingresar.
-          </p>
         </Field>
 
         <Field label="Email" error={errors.email}>

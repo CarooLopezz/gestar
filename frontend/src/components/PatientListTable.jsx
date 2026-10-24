@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { api } from "../api/client";
+import CredencialesCreadas from "./CredencialesCreadas";
 import PatientDetailModal from "./PatientDetailModal";
 import { formatFecha } from "../utils/fecha";
 import MisPacientesToggle from "./MisPacientesToggle";
 import { coincideBusqueda } from "../utils/busqueda";
 
-function ActionIcons({ patient, isBusy, confirming, onDetail, onEdit, onAskDelete, onConfirmDelete, onCancelDelete }) {
+function ActionIcons({ patient, isBusy, confirming, onDetail, onEdit, onAskDelete, onConfirmDelete, onCancelDelete, onNuevaContrasena }) {
   if (confirming) {
     return (
       <div className="flex items-center gap-2">
@@ -42,6 +43,14 @@ function ActionIcons({ patient, isBusy, confirming, onDetail, onEdit, onAskDelet
         ✏️
       </button>
       <button
+        onClick={onNuevaContrasena}
+        title="Generar una contraseña nueva"
+        aria-label="Generar una contraseña nueva"
+        className="w-7 h-7 flex items-center justify-center rounded-full text-amber-600 hover:bg-amber-50"
+      >
+        🔑
+      </button>
+      <button
         onClick={onAskDelete}
         title="Eliminar"
         aria-label="Eliminar"
@@ -68,6 +77,7 @@ export default function PatientListTable({
   const [editErrors, setEditErrors] = useState({});
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [nuevaCredencial, setNuevaCredencial] = useState(null);
   const [detailPatient, setDetailPatient] = useState(null);
 
   const filtered = useMemo(() => {
@@ -122,6 +132,19 @@ export default function PatientListTable({
       onPatientUpdated(updated);
     } catch (err) {
       showToast(err.message || "No se pudo cambiar el estado", false);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // Contraseña nueva (si no le llegó el mail o es una cuenta vieja que entraba con el DNI).
+  const generarContrasena = async (u) => {
+    if (!window.confirm(`¿Generar una contraseña nueva para ${u.nombre} ${u.apellido}? La anterior deja de funcionar.`)) return;
+    setBusyId(u.id);
+    try {
+      setNuevaCredencial(await api.nuevaContrasena("patients", u.id));
+    } catch (err) {
+      showToast(err.message || "No se pudo generar la contraseña", false);
     } finally {
       setBusyId(null);
     }
@@ -302,6 +325,7 @@ export default function PatientListTable({
                             onDetail={() => setDetailPatient(p)}
                             onEdit={() => startEdit(p)}
                             onAskDelete={() => setConfirmDeleteId(p.id)}
+                            onNuevaContrasena={() => generarContrasena(p)}
                             onConfirmDelete={() => confirmDelete(p.id)}
                             onCancelDelete={() => setConfirmDeleteId(null)}
                           />
@@ -379,6 +403,7 @@ export default function PatientListTable({
                       onDetail={() => setDetailPatient(p)}
                       onEdit={() => startEdit(p)}
                       onAskDelete={() => setConfirmDeleteId(p.id)}
+                      onNuevaContrasena={() => generarContrasena(p)}
                       onConfirmDelete={() => confirmDelete(p.id)}
                       onCancelDelete={() => setConfirmDeleteId(null)}
                     />
@@ -406,6 +431,25 @@ export default function PatientListTable({
           onClose={() => setDetailPatient(null)}
           showToast={showToast}
         />
+      )}
+      {nuevaCredencial && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setNuevaCredencial(null)}>
+          <div className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <CredencialesCreadas
+              nombre={`${nuevaCredencial.nombre} ${nuevaCredencial.apellido}`}
+              email={nuevaCredencial.email}
+              contrasena={nuevaCredencial.contrasena_provisoria}
+              mailEnviado={nuevaCredencial.mail_enviado}
+            >
+              <button
+                onClick={() => setNuevaCredencial(null)}
+                className="text-sm font-medium text-green-800 hover:underline"
+              >
+                Cerrar
+              </button>
+            </CredencialesCreadas>
+          </div>
+        </div>
       )}
     </div>
   );

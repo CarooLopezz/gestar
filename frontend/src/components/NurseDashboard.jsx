@@ -15,6 +15,7 @@ import Agenda from "./Agenda";
 import PanelGeneral from "./PanelGeneral";
 import FichaPaciente from "./FichaPaciente";
 import SeccionGraficos from "./SeccionGraficos";
+import CambiarContrasenaModal from "./CambiarContrasenaModal";
 
 // Cada ítem del menú agrupa una o más pantallas (views); las que van juntas
 // se muestran como pestañas (TABS). El ítem abre la primera.
@@ -76,6 +77,7 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
   const [appointments, setAppointments] = useState([]);
   const [nurses, setNurses] = useState([]);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [cambiandoContrasena, setCambiandoContrasena] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const withSessionGuard = (fn) => async (...args) => {
@@ -238,7 +240,13 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-gray-100">
+        <div className="p-3 border-t border-gray-100 space-y-1">
+          <button
+            onClick={() => setCambiandoContrasena(true)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50"
+          >
+            🔑 Cambiar contraseña
+          </button>
           <button
             onClick={() => setShowLogoutConfirm(true)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50"
@@ -295,14 +303,8 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
             <RegisterUserForm
               nurses={nurses}
               currentNurseId={nurse?.id}
-              onPatientCreated={(p) => {
-                setPatients((prev) => [...prev, p]);
-                setActiveView("list");
-              }}
-              onNurseCreated={(n) => {
-                setNurses((prev) => [...prev, n]);
-                setActiveView("list");
-              }}
+              onPatientCreated={(p) => setPatients((prev) => [...prev, p])}
+              onNurseCreated={(n) => setNurses((prev) => [...prev, n])}
               showToast={showToast}
             />
           </div>
@@ -418,6 +420,15 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
         )}
         </main>
       </div>
+
+      {cambiandoContrasena && nurse && (
+        <CambiarContrasenaModal
+          tipo="enfermero"
+          email={nurse.email}
+          onCerrar={() => setCambiandoContrasena(false)}
+          showToast={showToast}
+        />
+      )}
 
       <ConfirmLogoutModal
         open={showLogoutConfirm}

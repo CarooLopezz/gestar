@@ -10,6 +10,8 @@ class Nurse(db.Model):
     dni = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     role = db.Column(db.String(20), nullable=False, default="enfermero")
+    # Cifrada (werkzeug). Vacía en cuentas viejas: entran con el DNI.
+    password_hash = db.Column(db.String(255), nullable=True)
 
     def to_dict(self):
         return {
