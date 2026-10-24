@@ -52,8 +52,10 @@ def configurado():
 def enviar_mail(destinatario, asunto, cuerpo):
     """Manda un mail de texto. Devuelve True si se envió."""
     if _brevo_configurado():
+        log.info("Mandando mail a %s por Brevo", destinatario)
         return _enviar_brevo(destinatario, asunto, cuerpo)
     if _smtp_configurado():
+        log.info("Mandando mail a %s por SMTP (Brevo no configurado)", destinatario)
         return _enviar_smtp(destinatario, asunto, cuerpo)
     log.warning("Mail no configurado (falta BREVO_API_KEY o SMTP_USER/SMTP_PASSWORD); no se envió a %s", destinatario)
     return False
@@ -78,7 +80,8 @@ def _enviar_brevo(destinatario, asunto, cuerpo):
         method="POST",
     )
     try:
-        with urllib.request.urlopen(pedido, timeout=15):
+        with urllib.request.urlopen(pedido, timeout=15) as respuesta:
+            log.info("Brevo aceptó el mail a %s: %s", destinatario, respuesta.read().decode("utf-8", "replace"))
             return True
     except urllib.error.HTTPError as e:
         log.error("Brevo rechazó el mail a %s: %s %s", destinatario, e.code, e.read().decode("utf-8", "replace"))
