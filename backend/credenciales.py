@@ -2,7 +2,7 @@
 Contraseñas de embarazadas y enfermeros.
 
 Al registrar a alguien se genera una contraseña fácil de escribir (una
-palabra y cuatro números, ej. "Luna4821"), se guarda cifrada y se manda por
+palabra y cuatro números, ej. "Salud4821"), se guarda cifrada y se manda por
 mail. La persona la puede cambiar después si quiere.
 
 Las cuentas creadas antes de esto no tienen contraseña guardada: siguen
@@ -14,11 +14,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 MIN_LARGO = 6
 
-# Palabras cortas sin tildes ni eñes, fáciles de leer y de tipear en el celular.
+# Palabras cortas relacionadas con la salud y el embarazo, sin tildes ni eñes,
+# fáciles de leer y de tipear en el celular.
 PALABRAS = [
-    "Luna", "Sol", "Mar", "Rio", "Flor", "Nube", "Lago", "Pino", "Rosa", "Trigo",
-    "Miel", "Cielo", "Monte", "Vino", "Uva", "Lima", "Faro", "Duna", "Brisa", "Coral",
-    "Perla", "Jazmin", "Olivo", "Andes", "Cuyo", "Zonda", "Sauce", "Nogal", "Ceibo", "Puma",
+    "Salud", "Vida", "Bebe", "Latido", "Cuidar", "Nacer", "Crecer", "Calma", "Abrazo", "Amor",
+    "Mama", "Cuna", "Sano", "Vital", "Nutrir", "Agua", "Fruta", "Paseo", "Respiro", "Control",
+    "Pulso", "Energia", "Descanso", "Sonrisa", "Familia", "Ternura", "Alegria", "Cuidado", "Bienestar", "Ecografia",
 ]
 
 
