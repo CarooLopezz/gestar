@@ -202,17 +202,17 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-100 flex flex-col shrink-0 transform transition-transform duration-200 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-pink-50 border-r border-pink-100 flex flex-col shrink-0 transform transition-transform duration-200 md:static md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-2">
-          <span className="text-2xl">👩‍⚕️</span>
+        <div className="px-6 py-5 border-b border-pink-100 flex items-center gap-2">
+          <img src="/logo.png" alt="" className="h-8 w-auto" />
           <span className="font-bold text-purple-700">GESTAR+</span>
         </div>
 
         {nurse && (
-          <div className="px-6 py-3 border-b border-gray-100 text-xs text-gray-500">
+          <div className="px-6 py-3 border-b border-pink-100 text-xs text-gray-500">
             {nurse.nombre} {nurse.apellido}
           </div>
         )}
@@ -222,8 +222,8 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
             <button
               key={item.id}
               onClick={() => handleNavClick(item.views[0])}
-              className={`sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 ${
-                grupoActivo?.id === item.id ? "active bg-purple-50 text-purple-700" : ""
+              className={`sidebar-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-pink-100 ${
+                grupoActivo?.id === item.id ? "active bg-white text-purple-700 shadow-sm" : ""
               }`}
             >
               <span>{item.icon}</span>
@@ -240,16 +240,16 @@ export default function NurseDashboard({ nurse, onLogout, showToast }) {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-gray-100 space-y-1">
+        <div className="p-3 border-t border-pink-100 space-y-1">
           <button
             onClick={() => setCambiandoContrasena(true)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-pink-100"
           >
             🔑 Cambiar contraseña
           </button>
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-pink-100"
           >
             🚪 Cerrar sesión
           </button>

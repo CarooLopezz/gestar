@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import MisPacientesToggle from "./MisPacientesToggle";
+import { coincideBusqueda } from "../utils/busqueda";
 
 const TRIMESTRE = { 1: "1.er trimestre", 2: "2.º trimestre", 3: "3.er trimestre" };
 
@@ -25,6 +26,7 @@ function Numero({ titulo, valor, alerta, onClick }) {
 // Primera pantalla de la enfermera: cómo está el día y cada embarazada activa.
 export default function PanelGeneral({ patients, alerts, monitoring, appointments, currentNurseId, onVerFicha, onIr }) {
   const [soloMias, setSoloMias] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
 
   const alertasPorDni = useMemo(() => {
     const map = new Map();
@@ -32,7 +34,10 @@ export default function PanelGeneral({ patients, alerts, monitoring, appointment
     return map;
   }, [alerts]);
 
-  const fichas = monitoring.filter((m) => !soloMias || m.nurse_id === currentNurseId);
+  const fichas = monitoring
+    .filter((m) => !soloMias || m.nurse_id === currentNurseId)
+    .map((m) => ({ m, patient: patients.find((p) => p.id === m.patient_id) }))
+    .filter(({ m, patient }) => coincideBusqueda(patient || { nombre: m.patient_name }, busqueda));
   const activas = patients.filter((p) => p.estado === "Activo").length;
   const sinResponder = alerts.filter((a) => !a.respuesta).length;
   const sinControl = monitoring.filter((m) => m.necesita_control).length;
@@ -57,56 +62,87 @@ export default function PanelGeneral({ patients, alerts, monitoring, appointment
           <MisPacientesToggle checked={soloMias} onChange={setSoloMias} />
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {fichas.map((m) => {
-            const alertas = alertasPorDni.get(m.patient_dni) || 0;
-            const atrasados = m.estudios_faltantes.filter((e) => e.estado === "atrasado").length;
-            const patient = patients.find((p) => p.id === m.patient_id);
-            return (
-              <div key={m.patient_id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-                <div>
-                  <p className="font-semibold text-gray-800">{m.patient_name}</p>
-                  <p className="text-sm text-gray-500">
-                    {m.embarazo
-                      ? `Semana ${m.embarazo.semana} · ${TRIMESTRE[m.embarazo.trimestre]}`
-                      : "Sin fecha probable de parto"}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-1.5 text-xs font-medium">
-                  {alertas > 0 && (
-                    <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-700">
-                      {alertas} {alertas === 1 ? "alerta" : "alertas"}
-                    </span>
-                  )}
-                  {m.necesita_control && (
-                    <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
-                      {m.dias_sin_control === null ? "Nunca cargó datos" : `Sin control hace ${m.dias_sin_control} d`}
-                    </span>
-                  )}
-                  {atrasados > 0 && (
-                    <span className="px-2 py-0.5 rounded-full bg-orange-50 text-orange-700">
-                      {atrasados} {atrasados === 1 ? "estudio atrasado" : "estudios atrasados"}
-                    </span>
-                  )}
-                  {alertas === 0 && !m.necesita_control && atrasados === 0 && (
-                    <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700">Al día</span>
-                  )}
-                </div>
-                {patient && (
-                  <button
-                    onClick={() => onVerFicha(patient)}
-                    className="mt-auto self-start text-sm font-medium text-purple-600 hover:text-purple-800"
-                  >
-                    Ver ficha completa →
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <input
+          type="search"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Buscar por nombre, apellido o DNI..."
+          aria-label="Buscar embarazada"
+          className="w-full sm:max-w-xs border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
+        />
+
+        {fichas.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-left text-xs font-medium text-gray-500">
+                <tr>
+                  <th className="px-4 py-3">Embarazada</th>
+                  <th className="px-4 py-3">Embarazo</th>
+                  <th className="px-4 py-3">Estado</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {fichas.map(({ m, patient }) => {
+                  const alertas = alertasPorDni.get(m.patient_dni) || 0;
+                  const atrasados = m.estudios_faltantes.filter((e) => e.estado === "atrasado").length;
+                  return (
+                    <tr key={m.patient_id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-800">{m.patient_name}</p>
+                        {patient && <p className="text-xs text-gray-400">DNI {patient.dni}</p>}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                        {m.embarazo
+                          ? `Semana ${m.embarazo.semana} · ${TRIMESTRE[m.embarazo.trimestre]}`
+                          : "Sin fecha probable de parto"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1.5 text-xs font-medium">
+                          {alertas > 0 && (
+                            <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-700">
+                              {alertas} {alertas === 1 ? "alerta" : "alertas"}
+                            </span>
+                          )}
+                          {m.necesita_control && (
+                            <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                              {m.dias_sin_control === null ? "Nunca cargó datos" : `Sin control hace ${m.dias_sin_control} d`}
+                            </span>
+                          )}
+                          {atrasados > 0 && (
+                            <span className="px-2 py-0.5 rounded-full bg-orange-50 text-orange-700">
+                              {atrasados} {atrasados === 1 ? "estudio atrasado" : "estudios atrasados"}
+                            </span>
+                          )}
+                          {alertas === 0 && !m.necesita_control && atrasados === 0 && (
+                            <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700">Al día</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        {patient && (
+                          <button
+                            onClick={() => onVerFicha(patient)}
+                            className="text-sm font-medium text-purple-600 hover:text-purple-800"
+                          >
+                            Ver ficha →
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
         {fichas.length === 0 && (
           <p className="text-center text-gray-400 py-8 text-sm bg-white rounded-2xl border border-gray-100">
-            {soloMias ? "No tenés embarazadas asignadas." : "No hay embarazadas activas."}
+            {busqueda.trim()
+              ? "Ninguna embarazada coincide con la búsqueda."
+              : soloMias
+              ? "No tenés embarazadas asignadas."
+              : "No hay embarazadas activas."}
           </p>
         )}
       </section>

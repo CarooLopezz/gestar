@@ -1,7 +1,7 @@
 export default function LandingScreen({ onOpenNurse, onOpenPatient }) {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-purple-50 to-pink-50 gap-6 px-4">
-      <div className="text-6xl">🤰</div>
+      <img src="/logo.png" alt="Logo de GESTAR+" className="h-32 w-auto" />
       <h1 className="text-3xl font-bold text-purple-700">GESTAR+</h1>
       <p className="text-gray-500 text-center max-w-xs">
         Seguimiento de embarazo: presión arterial y síntomas, todo en un mismo lugar.
