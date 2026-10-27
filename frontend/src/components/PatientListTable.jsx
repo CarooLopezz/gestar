@@ -242,7 +242,7 @@ export default function PatientListTable({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Buscar por nombre, apellido, DNI o email..."
-        className="w-full border border-gray-200 rounded-lg px-3 py-2 mb-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+        className="w-full sm:max-w-sm border border-gray-200 rounded-lg px-3 py-2 mb-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
       />
       <div className="mb-3">
         <MisPacientesToggle checked={soloMias} onChange={setSoloMias} />

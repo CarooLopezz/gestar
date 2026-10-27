@@ -68,7 +68,7 @@ export default function PanelGeneral({ patients, alerts, monitoring, appointment
           onChange={(e) => setBusqueda(e.target.value)}
           placeholder="Buscar por nombre, apellido o DNI..."
           aria-label="Buscar embarazada"
-          className="w-full sm:max-w-xs border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
+          className="w-full sm:max-w-sm border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
         />
 
         {fichas.length > 0 && (
