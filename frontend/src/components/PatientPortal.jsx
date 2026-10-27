@@ -95,7 +95,7 @@ export default function PatientPortal({ onBack, showToast }) {
         }`}
       >
         <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-2">
-          <span className="text-2xl">🤰</span>
+          <img src="/logo.png" alt="" className="h-8 w-auto" />
           <span className="font-bold text-pink-600">GESTAR+</span>
         </div>
 

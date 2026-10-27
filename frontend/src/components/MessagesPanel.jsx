@@ -52,7 +52,7 @@ export default function MessagesPanel({ messages, onMessageUpdated, showToast })
   };
 
   return (
-    <div className="fade-in max-w-3xl">
+    <div className="fade-in max-w-2xl">
       <h2 className="text-xl font-semibold text-gray-800 mb-1">Mensajes</h2>
       <p className="text-sm text-gray-400 mb-4">Consultas enviadas por las pacientes.</p>
 

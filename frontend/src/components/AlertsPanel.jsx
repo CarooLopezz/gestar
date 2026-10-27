@@ -84,7 +84,7 @@ export default function AlertsPanel({ alerts: todas, patients, currentNurseId, o
   };
 
   return (
-    <div className="fade-in">
+    <div className="fade-in max-w-2xl">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Alertas</h2>
         <MisPacientesToggle checked={soloMias} onChange={setSoloMias} />
